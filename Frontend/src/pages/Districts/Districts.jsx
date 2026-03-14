@@ -1,25 +1,38 @@
 import { useState, useEffect } from 'react';
 import { SkeletonChart } from '../../components/Loading/Skeletons';
 import { BarGraph } from '../../components/Charts/SchemeCharts';
-import { districtPerformance } from '../../data/dummyData';
+import api from '../../utils/api';
 import { MapPin, TrendingUp, AlertTriangle } from 'lucide-react';
 import './Districts.css';
 
 const Districts = ({ role }) => {
     const [isLoading, setIsLoading] = useState(true);
+    const [performance, setPerformance] = useState([]);
 
     useEffect(() => {
-        setIsLoading(true);
-        const timer = setTimeout(() => setIsLoading(false), 800);
-        return () => clearTimeout(timer);
+        const fetchDistricts = async () => {
+            setIsLoading(true);
+            try {
+                const { data } = await api.get('/dashboard/analytics');
+                setPerformance(data.districtStats || []);
+            } catch (error) {
+                console.error("Error fetching district data:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchDistricts();
     }, []);
 
-    const districtData = districtPerformance.map(d => ({
-        district: d.district,
-        total: d.totalApplications,
-        approved: d.approved,
-        rejected: d.rejected
-    }));
+    const getGrade = (approved, total) => {
+        if (total === 0) return 'N/A';
+        const rate = (approved / total) * 100;
+        if (rate >= 80) return 'A';
+        if (rate >= 60) return 'B';
+        if (rate >= 40) return 'C';
+        return 'D';
+    };
 
     return (
         <div className="districts-page">
@@ -29,22 +42,22 @@ const Districts = ({ role }) => {
             </div>
 
             <div className="districts-grid animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                {districtPerformance.map((dist) => (
-                    <div key={dist.id} className="district-card glass-card">
+                {performance.map((dist) => (
+                    <div key={dist.district} className="district-card glass-card">
                         <div className="district-header">
                             <div className="district-title">
                                 <MapPin size={20} className="primary-icon" />
                                 <h3>{dist.district}</h3>
                             </div>
-                            <span className={`rating-badge score-${(dist.rating || 'B').replace('+', 'plus').toLowerCase()}`}>
-                                Grade {dist.rating || 'B'}
+                            <span className={`rating-badge score-${getGrade(dist.approved, dist.total).toLowerCase()}`}>
+                                Grade {getGrade(dist.approved, dist.total)}
                             </span>
                         </div>
 
                         <div className="district-stats">
                             <div className="d-stat">
                                 <span className="d-label">Total Applications</span>
-                                <span className="d-val">{dist.totalApplications}</span>
+                                <span className="d-val">{dist.total}</span>
                             </div>
                             <div className="d-stat">
                                 <span className="d-label">Approved</span>
@@ -72,7 +85,7 @@ const Districts = ({ role }) => {
                     <SkeletonChart />
                 ) : (
                     <BarGraph
-                        data={districtData}
+                        data={performance}
                         title="District Comparative Performance"
                         dataKey="total"
                         xAxisKey="district"

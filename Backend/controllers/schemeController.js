@@ -27,7 +27,29 @@ const createScheme = async (req, res) => {
 // @route   GET /api/schemes
 // @access  Private
 const getSchemes = async (req, res) => {
-    const schemes = await Scheme.find({}).populate('createdBy', 'name');
+    const schemes = await Scheme.aggregate([
+        {
+            $lookup: {
+                from: 'applications',
+                localField: '_id',
+                foreignField: 'schemeId',
+                as: 'applications'
+            }
+        },
+        {
+            $project: {
+                schemeName: 1,
+                description: 1,
+                budget: 1,
+                district: 1,
+                status: 1,
+                startDate: 1,
+                endDate: 1,
+                createdAt: 1,
+                beneficiariesCount: { $size: "$applications" }
+            }
+        }
+    ]);
     res.json(schemes);
 };
 

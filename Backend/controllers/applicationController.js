@@ -1,4 +1,6 @@
 import Application from '../models/Application.js';
+import User from '../models/User.js';
+import { createNotification } from './notificationController.js';
 
 // @desc    Create new beneficiary application
 // @route   POST /api/applications
@@ -83,6 +85,40 @@ const approveApplication = async (req, res) => {
     }
 
     const updatedApplication = await application.save();
+
+    // Notification Logic
+    if (action === 'reject') {
+        // Notify someone? Maybe the system log
+        await createNotification(req.user._id, 'Application Rejected', `You rejected application #${updatedApplication._id.toString().slice(-6).toUpperCase()}`, 'error');
+    } else {
+        // Notify next level
+        let nextRole = '';
+        if (req.user.role === 'field_officer') nextRole = 'district_officer';
+        if (req.user.role === 'district_officer') nextRole = 'admin';
+
+        if (nextRole) {
+            const nextUsers = await User.find({ role: nextRole });
+            for (const user of nextUsers) {
+                await createNotification(
+                    user._id,
+                    'New Application for Review',
+                    `Application #${updatedApplication._id.toString().slice(-6).toUpperCase()} is pending your review.`,
+                    'info'
+                );
+            }
+        } else if (req.user.role === 'admin') {
+            // Final approval notification can go to the field officer who started it
+            if (updatedApplication.fieldOfficerApproval?.approvedBy) {
+                await createNotification(
+                    updatedApplication.fieldOfficerApproval.approvedBy,
+                    'Application Finalized',
+                    `Your application #${updatedApplication._id.toString().slice(-6).toUpperCase()} has been fully approved.`,
+                    'success'
+                );
+            }
+        }
+    }
+
     res.json(updatedApplication);
 };
 

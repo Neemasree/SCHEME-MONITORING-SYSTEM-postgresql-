@@ -43,9 +43,61 @@ const getAnalytics = async (req, res) => {
         { $project: { name: "$_id", value: 1, _id: 0 } }
     ]);
 
+    // 3. District Stats
+    const districtStats = await Application.aggregate([
+        {
+            $group: {
+                _id: "$district",
+                total: { $sum: 1 },
+                approved: {
+                    $sum: { $cond: [{ $eq: ["$status", "Approved"] }, 1, 0] }
+                },
+                rejected: {
+                    $sum: { $cond: [{ $eq: ["$status", "Rejected"] }, 1, 0] }
+                },
+                pending: {
+                    $sum: { $cond: [{ $regex: /Pending/ }, 1, 0] }
+                }
+            }
+        },
+        { $project: { district: "$_id", total: 1, approved: 1, rejected: 1, pending: 1, _id: 0 } }
+    ]);
+
+    // 4. Trend Data (Last 6 months)
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const trendData = await Application.aggregate([
+        { $match: { appliedDate: { $gte: sixMonthsAgo } } },
+        {
+            $group: {
+                _id: {
+                    month: { $month: "$appliedDate" },
+                    year: { $year: "$appliedDate" }
+                },
+                applications: { $sum: 1 }
+            }
+        },
+        { $sort: { "_id.year": 1, "_id.month": 1 } },
+        {
+            $project: {
+                month: {
+                    $arrayElemAt: [
+                        ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+                        "$_id.month"
+                    ]
+                },
+                applications: 1,
+                _id: 0
+            }
+        }
+    ]);
+
     res.json({
         statusData,
-        schemeData
+        schemeData,
+        districtStats,
+        trendData
     });
 };
 

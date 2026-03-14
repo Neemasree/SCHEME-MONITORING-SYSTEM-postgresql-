@@ -31,24 +31,6 @@ const Dashboard = ({ role, username }) => {
         fetchDashboardData();
     }, []);
 
-    // Trend Data (Demo data - remains same or could be fetched)
-    const trendData = [
-        { month: 'Jan', applications: 120 },
-        { month: 'Feb', applications: 250 },
-        { month: 'Mar', applications: 180 },
-        { month: 'Apr', applications: 320 },
-        { month: 'May', applications: 450 },
-        { month: 'Jun', applications: 390 },
-    ];
-
-    // District Data (Demo placeholder)
-    const districtData = [
-        { district: 'Chennai', total: 450, approved: 380 },
-        { district: 'Salem', total: 320, approved: 210 },
-        { district: 'Madurai', total: 290, approved: 240 },
-        { district: 'Trichy', total: 210, approved: 150 },
-    ];
-
     const greeting = {
         admin: `Welcome Administrator ${username}. System metrics are live.`,
         district: `Welcome ${username}. District metrics are synchronized.`,
@@ -69,8 +51,8 @@ const Dashboard = ({ role, username }) => {
                 <div className="chart-span-2">
                     {isLoading ? <SkeletonChart /> : (
                         <BarGraph
-                            data={districtData}
-                            title="District Performance (Total vs Approved)"
+                            data={analytics.districtStats}
+                            title="District Performance (Total Applications)"
                             dataKey="total"
                             xAxisKey="district"
                         />
@@ -81,7 +63,7 @@ const Dashboard = ({ role, username }) => {
                 <div className="chart-span-2">
                     {isLoading ? <SkeletonChart /> : (
                         <LineGraph
-                            data={trendData}
+                            data={analytics.trendData}
                             title="Application Inflow Trend (6 Months)"
                             dataKey="applications"
                             xAxisKey="month"

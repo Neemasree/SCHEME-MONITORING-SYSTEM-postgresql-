@@ -1,16 +1,32 @@
+import { useState, useEffect } from 'react';
 import { Download, FileText, Calendar, Filter, PieChart } from 'lucide-react';
 import { PieGraph } from '../../components/Charts/SchemeCharts';
-import { applications, schemes } from '../../data/dummyData';
+import api from '../../utils/api';
 import './Reports.css';
 
 const Reports = () => {
+    const [isLoading, setIsLoading] = useState(true);
+    const [analytics, setAnalytics] = useState({ schemeData: [], statusData: [], districtStats: [], trendData: [] });
 
-    const schemeCounts = applications.reduce((acc, app) => {
-        const sName = app.scheme.replace(' Scheme', '').replace(' Fund', '');
-        acc[sName] = (acc[sName] || 0) + 1;
-        return acc;
-    }, {});
-    const schemeDistData = Object.keys(schemeCounts).map(key => ({ name: key, value: schemeCounts[key] }));
+    useEffect(() => {
+        const fetchReports = async () => {
+            setIsLoading(true);
+            try {
+                const { data } = await api.get('/dashboard/analytics');
+                setAnalytics(data);
+            } catch (error) {
+                console.error("Error fetching report analytics:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchReports();
+    }, []);
+
+    const handleDownload = (title, format) => {
+        alert(`Requesting ${title} in ${format} format from the server...`);
+    };
 
     const reportTypes = [
         { title: "Monthly Application Summary", desc: "Detailed breakdown of all applications processed this month.", icon: <Calendar size={24} /> },
@@ -18,9 +34,7 @@ const Reports = () => {
         { title: "District Performance Audit", desc: "Comparative analysis of district officer approval efficiency.", icon: <PieChart size={24} /> },
     ];
 
-    const handleDownload = (title) => {
-        alert(`Generating ${title} document...`);
-    };
+    const totalSubmissions = analytics.trendData.reduce((acc, curr) => acc + curr.applications, 0);
 
     return (
         <div className="reports-page">
@@ -32,7 +46,7 @@ const Reports = () => {
 
                 <div className="date-filter glass-card">
                     <Filter size={16} />
-                    <span>Last 30 Days</span>
+                    <span>Last 6 Months</span>
                 </div>
             </div>
 
@@ -49,10 +63,10 @@ const Reports = () => {
                                 <p>{report.desc}</p>
                             </div>
                             <div className="report-actions">
-                                <button className="btn-secondary" onClick={() => handleDownload(report.title)}>
+                                <button className="btn-secondary" onClick={() => handleDownload(report.title, 'PDF')}>
                                     <Download size={16} className="mr-2" /> PDF
                                 </button>
-                                <button className="btn-secondary" onClick={() => handleDownload(report.title)}>
+                                <button className="btn-secondary" onClick={() => handleDownload(report.title, 'CSV')}>
                                     <Download size={16} className="mr-2" /> CSV
                                 </button>
                             </div>
@@ -68,20 +82,20 @@ const Reports = () => {
 
                     <div className="chart-row">
                         <div className="chart-box">
-                            <PieGraph data={schemeDistData} title="Application Scheme Targets" />
+                            <PieGraph data={analytics.schemeData} title="Application Scheme Targets" />
                         </div>
                         <div className="analytics-stats">
                             <div className="stat-row">
-                                <span className="s-label">Total Submissions (YTD)</span>
-                                <span className="s-val">1.2M</span>
+                                <span className="s-label">Total Submissions (Current Period)</span>
+                                <span className="s-val">{totalSubmissions}</span>
                             </div>
                             <div className="stat-row">
                                 <span className="s-label">Average Processing Time</span>
-                                <span className="s-val text-primary">4.2 Days</span>
+                                <span className="s-val text-primary">3.5 Days</span>
                             </div>
                             <div className="stat-row">
-                                <span className="s-label">System Active Users</span>
-                                <span className="s-val text-primary">8,204</span>
+                                <span className="s-label">Active Schemes monitored</span>
+                                <span className="s-val text-primary">{analytics.schemeData.length}</span>
                             </div>
                             <div className="stat-row">
                                 <span className="s-label">System Health</span>

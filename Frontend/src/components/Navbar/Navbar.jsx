@@ -1,11 +1,30 @@
 import { useState, useRef, useEffect } from 'react';
-import { Bell, Search, User, CheckCircle, FileText, X } from 'lucide-react';
+import { Bell, Search, User, CheckCircle, FileText, X, AlertTriangle, Info } from 'lucide-react';
+import api from '../../utils/api';
 import './Navbar.css';
 
 const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
     const [showNotifications, setShowNotifications] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [notifications, setNotifications] = useState([]);
     const notifRef = useRef(null);
+
+    // Fetch Notifications
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const { data } = await api.get('/notifications');
+                setNotifications(data);
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+            }
+        };
+
+        fetchNotifications();
+        // Polling for new notifications every 30 seconds
+        const interval = setInterval(fetchNotifications, 30000);
+        return () => clearInterval(interval);
+    }, []);
 
     // Close dropdown when clicking outside
     useEffect(() => {
@@ -17,6 +36,15 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
         document.addEventListener('mousedown', handleClickOutside);
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
+
+    const handleMarkRead = async (id) => {
+        try {
+            await api.put(`/notifications/${id}/read`);
+            setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
+        } catch (error) {
+            console.error("Error marking notification as read:", error);
+        }
+    };
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -33,6 +61,15 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
         }
     };
 
+    const getIcon = (type) => {
+        switch (type) {
+            case 'success': return <CheckCircle size={16} className="success-text" />;
+            case 'error': return <X size={16} className="danger-text" />;
+            case 'warning': return <AlertTriangle size={16} className="warning-text" />;
+            default: return <Info size={16} className="primary-icon" />;
+        }
+    };
+
     // Map roles to readable labels and colors
     const roleDisplay = {
         admin: { label: 'System Admin', color: 'admin-badge' },
@@ -41,29 +78,7 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
     };
 
     const currentRole = roleDisplay[role] || roleDisplay.field;
-
-    // Dummy notifications based on role
-    const getDummyNotifications = () => {
-        if (role === 'admin') {
-            return [
-                { id: 1, title: 'New Scheme Draft', desc: 'Central housing draft needs review', time: '10m ago', icon: <FileText size={16} />, unread: true },
-                { id: 2, title: 'Funds Depleted', desc: 'Coimbatore district needs fund allocation', time: '1h ago', icon: <Bell size={16} />, unread: true },
-            ];
-        }
-        if (role === 'district') {
-            return [
-                { id: 1, title: 'Application Escalated', desc: 'Field officer flagged ID #105', time: '5m ago', icon: <Bell size={16} />, unread: true },
-                { id: 2, title: 'Batch Approved', desc: 'Admin approved 45 applications', time: '2h ago', icon: <CheckCircle size={16} />, unread: false },
-            ];
-        }
-        return [
-            { id: 1, title: 'New Assignment', desc: 'Verify Ravi Kumar for Farmer Subsidy', time: 'Just now', icon: <User size={16} />, unread: true },
-            { id: 2, title: 'Application Rejected', desc: 'Admin rejected ID #89 missing docs', time: '1d ago', icon: <X size={16} />, unread: false },
-        ];
-    };
-
-    const notifications = getDummyNotifications();
-    const unreadCount = notifications.filter(n => n.unread).length;
+    const unreadCount = notifications.filter(n => !n.isRead).length;
 
     return (
         <header className="navbar glass-card">
@@ -101,17 +116,23 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
                                 <button className="mark-read-btn">Mark all as read</button>
                             </div>
                             <div className="notif-list">
-                                {notifications.map(notif => (
-                                    <div key={notif.id} className={`notif-item ${notif.unread ? 'unread' : ''}`}>
-                                        <div className="notif-icon-circle">{notif.icon}</div>
+                                {notifications.length > 0 ? notifications.map(notif => (
+                                    <div
+                                        key={notif._id}
+                                        className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
+                                        onClick={() => handleMarkRead(notif._id)}
+                                    >
+                                        <div className="notif-icon-circle">{getIcon(notif.type)}</div>
                                         <div className="notif-content">
                                             <p className="notif-title">{notif.title}</p>
-                                            <p className="notif-desc">{notif.desc}</p>
-                                            <span className="notif-time">{notif.time}</span>
+                                            <p className="notif-desc">{notif.message}</p>
+                                            <span className="notif-time">{new Date(notif.createdAt).toLocaleTimeString()}</span>
                                         </div>
-                                        {notif.unread && <div className="unread-dot"></div>}
+                                        {!notif.isRead && <div className="unread-dot"></div>}
                                     </div>
-                                ))}
+                                )) : (
+                                    <div className="notif-empty">No new notifications</div>
+                                )}
                             </div>
                             <div className="notif-footer">
                                 <button className="view-all-btn">View All Notifications</button>
