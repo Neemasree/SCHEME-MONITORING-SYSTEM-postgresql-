@@ -1,0 +1,28 @@
+.dashboard-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.chart-span-2 {
+    grid-column: span 2;
+}
+
+.chart-item {
+    height: 100%;
+}
+
+@media (max-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-span-2 {
+        grid-column: span 1;
+    }
+}

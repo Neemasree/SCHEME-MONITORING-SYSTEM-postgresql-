@@ -1,44 +1,16 @@
-# 🏛 SMART SCHEME MONITORING SYSTEM
+# React + Vite
 
-## Role-Based Detailed Functional Content
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-### 👤 1. BENEFICIARY ROLE (Citizen Applicant)
-**Role Purpose:** A registered citizen who applies for government schemes and tracks approval progress.
+Currently, two official plugins are available:
 
-#### 🖥 Dashboard Content
-- **Overview Section**: Total schemes available, Total applications submitted, Approved applications, Rejected applications, Pending applications.
-- **Application Progress Tracker**: 4-step progress bar (Submitted -> L1 Review -> L2 Review -> L3 Approval).
-- **Scheme Discovery Section**: Search, Filter by Category/Income/District, View Details, Apply.
-- **Application Submission Page**: Personal/Income details, Document uploads, Declaration.
-- **Notifications Panel**: Status updates, Rejection reasons, Fund confirmation.
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-### 🟢 2. LEVEL 1 OFFICER (Field Verification Officer)
-**Role Purpose:** First-level verification of applications at local level.
+## React Compiler
 
-#### 🖥 Dashboard Content
-- **Overview Metrics**: Pending review, Approved/Rejected today, Escalation alerts.
-- **Application Review Panel**: Applicant details, Documents, Eligibility checklist, Fraud risk indicator, Verification notes.
-- **Verification Checklist Section**: Income/Identity validation, Duplicate check, Field visit confirmation.
-- **Remarks History**: History logs with timestamping.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-### 🟡 3. LEVEL 2 OFFICER (District Officer)
-**Role Purpose:** District-level validation and budget oversight.
+## Expanding the ESLint configuration
 
-#### 🖥 Dashboard Content
-- **District Overview**: Applications in district, Pending L2, District budget allocated/remaining, Approval rate.
-- **Application Validation Section**: L1 remarks, Document summary, Budget impact, Risk indicators.
-- **District Analytics**: Scheme-wise applications, Approval trends, Fraud flags.
-
-### 🔵 4. LEVEL 3 OFFICER (State Authority / Final Approval)
-**Role Purpose:** Final approval authority and fund sanctioning body.
-
-#### 🖥 Dashboard Content
-- **State Overview**: State-wide applications, Pending final approvals, Funds required/disbursed, Rejection stats.
-- **Final Approval Queue**: Full history, Budget impact, Risk score, Officer remarks chain.
-- **Fund Release Panel**: Disburse funds, Transaction ID tracking, Certificate generation.
-
-### 🛡 5. AUDITOR ROLE (Optional but Powerful)
-**Role Purpose:** Ensures transparency and monitors fraud patterns.
-
-#### 🖥 Dashboard Content
-- Approval time tracking, Officer performance metrics, Suspicious pattern detection, Duplicate analysis, Budget misuse alerts, Audit logs.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.

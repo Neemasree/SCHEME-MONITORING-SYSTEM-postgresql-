@@ -1,0 +1,102 @@
+export const schemes = [
+    {
+        id: 1,
+        name: "Farmer Subsidy Scheme",
+        description: "Financial support for buying seeds and fertilizers.",
+        budget: "₹500 Crores",
+        district: "Salem",
+        status: "Active",
+        beneficiariesCount: 4500,
+    },
+    {
+        id: 2,
+        name: "Girl Child Education Fund",
+        description: "Scholarship for higher education of girl children.",
+        budget: "₹200 Crores",
+        district: "Coimbatore",
+        status: "Active",
+        beneficiariesCount: 12000,
+    },
+    {
+        id: 3,
+        name: "Rural Housing Scheme",
+        description: "Assistance to build concrete houses in rural areas.",
+        budget: "₹1000 Crores",
+        district: "Madurai",
+        status: "Active",
+        beneficiariesCount: 3200,
+    },
+];
+
+export const applications = [
+    {
+        id: 101,
+        beneficiary: "Ravi Kumar",
+        scheme: "Farmer Subsidy Scheme",
+        district: "Salem",
+        status: "Pending Field Officer",
+        dateApplied: "2026-03-10",
+    },
+    {
+        id: 102,
+        beneficiary: "Lakshmi",
+        scheme: "Girl Child Education Fund",
+        district: "Coimbatore",
+        status: "Pending District Officer",
+        dateApplied: "2026-03-11",
+    },
+    {
+        id: 103,
+        beneficiary: "Murugan",
+        scheme: "Rural Housing Scheme",
+        district: "Madurai",
+        status: "Approved",
+        dateApplied: "2026-03-01",
+    },
+    {
+        id: 104,
+        beneficiary: "Anitha",
+        scheme: "Girl Child Education Fund",
+        district: "Chennai",
+        status: "Rejected",
+        dateApplied: "2026-02-25",
+    },
+    {
+        id: 105,
+        beneficiary: "Karthik",
+        scheme: "Farmer Subsidy Scheme",
+        district: "Salem",
+        status: "Pending Field Officer",
+        dateApplied: "2026-03-14",
+    },
+];
+
+export const districtPerformance = [
+    {
+        id: 1,
+        district: "Salem",
+        totalApplications: 500,
+        approved: 300,
+        pending: 150,
+        rejected: 50,
+        rating: "A",
+    },
+    {
+        id: 2,
+        district: "Coimbatore",
+        totalApplications: 800,
+        approved: 600,
+        pending: 100,
+        rejected: 100,
+        rating: "A+",
+    },
+    {
+        id: 3,
+        district: "Madurai",
+        totalApplications: 400,
+        approved: 200,
+        pending: 150,
+        rejected: 50,
+        rating: "B",
+    },
+];

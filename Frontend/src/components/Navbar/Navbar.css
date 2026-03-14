@@ -1,0 +1,305 @@
+.navbar {
+    height: var(--navbar-height);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 32px;
+    background: var(--glass-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 90;
+    border-radius: 0;
+}
+
+.navbar-left {
+    display: flex;
+    align-items: center;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 20px;
+    width: 300px;
+    transition: all var(--transition-normal);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.search-bar:focus-within {
+    box-shadow: 0 0 0 2px var(--primary-light);
+    width: 380px;
+}
+
+.search-icon {
+    color: var(--text-muted);
+    margin-right: 10px;
+}
+
+.search-bar input {
+    border: none;
+    background: transparent;
+    outline: none;
+    width: 100%;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.search-bar input::placeholder {
+    color: var(--text-muted);
+}
+
+.clear-search-btn {
+    background: transparent;
+    color: var(--text-muted);
+    display: flex;
+    border-radius: 50%;
+    padding: 2px;
+}
+
+.clear-search-btn:hover {
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+}
+
+.navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.notification-wrapper {
+    position: relative;
+}
+
+.icon-btn {
+    background: transparent;
+    color: var(--text-muted);
+    padding: 8px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background-color: var(--bg-main);
+    color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.notification-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: var(--status-rejected);
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    height: 16px;
+    width: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* Notifications Dropdown */
+.notifications-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 12px;
+    width: 340px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: var(--shadow-lg), 0 0 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+}
+
+.notif-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    border-bottom: 1px solid var(--border-color);
+    background: rgba(248, 250, 252, 0.5);
+}
+
+.notif-header h4 {
+    font-size: 14px;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+.mark-read-btn {
+    background: transparent;
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.mark-read-btn:hover {
+    text-decoration: underline;
+}
+
+.notif-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color 0.2s;
+    position: relative;
+    cursor: pointer;
+}
+
+.notif-item:hover {
+    background-color: rgba(59, 130, 246, 0.03);
+}
+
+.notif-item.unread {
+    background-color: rgba(59, 130, 246, 0.05);
+}
+
+.notif-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    flex-shrink: 0;
+}
+
+.notif-content {
+    flex: 1;
+}
+
+.notif-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 2px;
+}
+
+.notif-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 6px;
+}
+
+.notif-time {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.unread-dot {
+    position: absolute;
+    top: 20px;
+    right: 16px;
+    width: 8px;
+    height: 8px;
+    background-color: var(--primary);
+    border-radius: 50%;
+}
+
+.notif-footer {
+    padding: 12px;
+    text-align: center;
+    border-top: 1px solid var(--border-color);
+    background: rgba(248, 250, 252, 0.5);
+}
+
+.view-all-btn {
+    background: transparent;
+    color: var(--primary);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.view-all-btn:hover {
+    color: var(--primary-light);
+}
+
+/* User Profile */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    padding: 6px 16px;
+    border-left: 1px solid var(--border-color);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.username {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-dark);
+}
+
+.role-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 2px;
+}
+
+/* Role Specific Colors */
+.admin-badge {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+}
+
+.district-badge {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #047857;
+}
+
+.field-badge {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #1d4ed8;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast);
+}
+
+.user-profile:hover .avatar {
+    transform: scale(1.05);
+}

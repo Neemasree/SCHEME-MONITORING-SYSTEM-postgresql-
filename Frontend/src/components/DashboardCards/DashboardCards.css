@@ -1,0 +1,117 @@
+.dashboard-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Color Variations */
+.blue-card {
+    border-left: 4px solid #3b82f6;
+}
+
+.blue-card .stat-icon-wrapper {
+    color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+}
+
+.green-card {
+    border-left: 4px solid #10b981;
+}
+
+.green-card .stat-icon-wrapper {
+    color: #10b981;
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.amber-card {
+    border-left: 4px solid #f59e0b;
+}
+
+.amber-card .stat-icon-wrapper {
+    color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.1);
+}
+
+.red-card {
+    border-left: 4px solid #ef4444;
+}
+
+.red-card .stat-icon-wrapper {
+    color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.purple-card {
+    border-left: 4px solid #8b5cf6;
+}
+
+.purple-card .stat-icon-wrapper {
+    color: #8b5cf6;
+    background-color: rgba(139, 92, 246, 0.1);
+}
+
+
+.stat-content {
+    display: flex;
+    flex-direction: column;
+    z-index: 2;
+}
+
+.stat-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.stat-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: transform var(--transition-normal);
+}
+
+.stat-card:hover .stat-icon-wrapper {
+    transform: scale(1.1) rotate(5deg);
+}
+
+/* Decorative background shapes */
+.stat-card::after {
+    content: '';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent);
+    z-index: 1;
+}

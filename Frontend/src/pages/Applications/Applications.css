@@ -1,0 +1,26 @@
+.applications-page {
+    display: flex;
+    flex-direction: column;
+}
+
+.filter-select {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background-color: white;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--text-dark);
+    cursor: pointer;
+    outline: none;
+    box-shadow: var(--shadow-sm);
+    transition: border-color var(--transition-fast);
+}
+
+.filter-select:focus {
+    border-color: var(--primary-light);
+}
+
+.applications-content {
+    margin-top: 24px;
+}
