@@ -47,6 +47,6 @@ const applicationSchema = mongoose.Schema({
     timestamps: true
 });
 
-const Application = mongoose.model('Application', applicationSchema);
+const Application = mongoose.model('Application', applicationSchema, 'gvt');
 
 export default Application;
