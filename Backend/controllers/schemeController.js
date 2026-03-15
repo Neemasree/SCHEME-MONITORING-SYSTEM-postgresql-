@@ -4,22 +4,32 @@ import Scheme from '../models/Scheme.js';
 // @route   POST /api/schemes
 // @access  Private/Admin
 const createScheme = async (req, res) => {
-    const { schemeName, description, budget, district, startDate, endDate } = req.body;
+    try {
+        const { schemeName, description, budget, district, startDate, endDate } = req.body;
+        console.log('📝 Creating new scheme:', req.body);
 
-    const scheme = await Scheme.create({
-        schemeName,
-        description,
-        budget,
-        district,
-        startDate,
-        endDate,
-        createdBy: req.user._id
-    });
+        const scheme = await Scheme.create({
+            schemeName,
+            description,
+            budget,
+            district,
+            startDate,
+            endDate,
+            createdBy: req.user._id
+        });
 
-    if (scheme) {
-        res.status(201).json(scheme);
-    } else {
-        res.status(400).json({ message: 'Invalid scheme data' });
+        if (scheme) {
+            console.log('✅ Scheme created successfully:', scheme._id);
+            res.status(201).json(scheme);
+        } else {
+            res.status(400).json({ message: 'Invalid scheme data' });
+        }
+    } catch (error) {
+        console.error('❌ Error creating scheme:', error);
+        res.status(500).json({
+            message: 'Internal Server Error',
+            error: error.message
+        });
     }
 };
 

@@ -4,10 +4,15 @@ import Notification from '../models/Notification.js';
 // @route   GET /api/notifications
 // @access  Private
 const getNotifications = async (req, res) => {
-    const notifications = await Notification.find({ userId: req.user._id })
-        .sort({ createdAt: -1 })
-        .limit(20);
-    res.json(notifications);
+    try {
+        const notifications = await Notification.find({ userId: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(20);
+        res.json(notifications);
+    } catch (error) {
+        console.error('❌ Error in getNotifications:', error);
+        res.status(500).json({ message: 'Error fetching notifications' });
+    }
 };
 
 // @desc    Mark notification as read

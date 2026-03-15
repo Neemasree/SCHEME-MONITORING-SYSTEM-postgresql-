@@ -3,33 +3,36 @@ import StatusTable from '../../components/Tables/StatusTable';
 import { SkeletonTable } from '../../components/Loading/Skeletons';
 import api from '../../utils/api';
 import { Plus } from 'lucide-react';
+import SchemeModal from './SchemeModal';
 import './Schemes.css';
 
 const Schemes = ({ role, searchTerm = '' }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const fetchSchemes = async () => {
+        setIsLoading(true);
+        try {
+            const { data } = await api.get('/schemes');
+            // Map backend fields to UI keys
+            const mappedData = data.map(s => ({
+                ...s,
+                id: s._id.slice(-6).toUpperCase(), // Short ID for display
+                name: s.schemeName,
+                budget: s.budget >= 10000000
+                    ? `₹${(s.budget / 10000000).toFixed(2)} Cr`
+                    : `₹${(s.budget / 100000).toFixed(2)} L`,
+            }));
+            setData(mappedData);
+        } catch (error) {
+            console.error("Error fetching schemes:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchSchemes = async () => {
-            setIsLoading(true);
-            try {
-                const { data } = await api.get('/schemes');
-                // Map backend fields to UI keys
-                const mappedData = data.map(s => ({
-                    ...s,
-                    id: s._id.slice(-6).toUpperCase(), // Short ID for display
-                    name: s.schemeName,
-                    budget: `₹${(s.budget / 10000000).toFixed(2)} Cr`,
-                    beneficiariesCount: Math.floor(Math.random() * 5000) + 1000 // Placeholder for now
-                }));
-                setData(mappedData);
-            } catch (error) {
-                console.error("Error fetching schemes:", error);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
         fetchSchemes();
     }, []);
 
@@ -63,7 +66,17 @@ const Schemes = ({ role, searchTerm = '' }) => {
     };
 
     const handleAddScheme = () => {
-        alert("The backend is ready to accept POST /api/schemes. In a real scenario, this would open a form modal.");
+        setIsModalOpen(true);
+    };
+
+    const handleSaveScheme = async (newScheme) => {
+        try {
+            await api.post('/schemes', newScheme);
+            fetchSchemes(); // Refresh list after saving
+        } catch (error) {
+            console.error("Error saving scheme:", error);
+            alert("Failed to save scheme. Please try again.");
+        }
     };
 
     return (
@@ -93,6 +106,12 @@ const Schemes = ({ role, searchTerm = '' }) => {
                     />
                 )}
             </div>
+
+            <SchemeModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={handleSaveScheme}
+            />
         </div>
     );
 };

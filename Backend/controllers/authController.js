@@ -1,13 +1,5 @@
-import User from '../models/User.js';
-import generateToken from '../utils/generateToken.js';
-
-// @desc    Auth user & get token
-// @route   POST /api/auth/login
-// @access  Public
 const authUser = async (req, res) => {
     const { email, password } = req.body;
-    console.log('--- Auth Request Body ---');
-    console.log(req.body);
 
     console.log(`🔍 Login Attempt: ${email}`);
     const user = await User.findOne({ email });
