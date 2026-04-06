@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🏛️ Government Monitoring System</h1>
+  <h1>🏛️ SCHEME-MONITORING-SYSTEM </h1>
   <p><i>A comprehensive, role-based architecture for modernizing government scheme allocations, application tracking, and district-level performance analytics.</i></p>
   
   <p>
@@ -15,7 +15,7 @@
 
 ## 📖 Overview
 
-The **Government Monitoring System** solves the critical problem of disconnected, opaque public sector workflows. It brings transparency, speed, and strict verification hierarchies to the process of allocating government schemes and managing beneficiary applications. 
+The **SCHEME-MONITORING-SYSTEM** solves the critical problem of disconnected, opaque public sector workflows. It brings transparency, speed, and strict verification hierarchies to the process of allocating government schemes and managing beneficiary applications. 
 
 By migrating to a highly structured **PostgreSQL** relational database, this system ensures data integrity, fast complex analytical queries, and reliable multi-tiered tracking.
 
