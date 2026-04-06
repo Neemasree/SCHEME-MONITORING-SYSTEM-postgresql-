@@ -18,11 +18,9 @@ const Schemes = ({ role, searchTerm = '' }) => {
             // Map backend fields to UI keys
             const mappedData = data.map(s => ({
                 ...s,
-                id: s._id.slice(-6).toUpperCase(), // Short ID for display
-                name: s.schemeName,
-                budget: s.budget >= 10000000
-                    ? `₹${(s.budget / 10000000).toFixed(2)} Cr`
-                    : `₹${(s.budget / 100000).toFixed(2)} L`,
+                id: String(s.id).padStart(6, '0').toUpperCase(), // Short ID for display
+                name: s.schemeName || s.name,
+                budget: s.budget, // Already stored as string e.g. "₹500 Crores"
             }));
             setData(mappedData);
         } catch (error) {

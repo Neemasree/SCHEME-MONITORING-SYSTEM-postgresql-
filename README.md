@@ -1,97 +1,66 @@
-# 🏛️ Government Scheme Monitoring System (GSMS)
+# Government Scheme Monitoring System (PostgreSQL Edition)
 
-![Project Hero](./hero_mockup.png)
+A robust, role-based web application designed to monitor, manage, and evaluate government schemes and benficiary applications across various districts efficiently. This system connects System Administrators, District Officers, and Field Officers onto a single unified platform.
 
-## 📌 Project Overview
-The **Government Scheme Monitoring System (GSMS)** is a high-transparency, role-based governance platform designed to streamline the lifecycle of public welfare schemes. From initial field verification to final fund disbursement, GSMS ensures accountability, data isolation, and real-time oversight across multiple administrative levels.
+## 🌟 Key Features
 
----
+* **Role-Based Access Control**: Tailored dashboards and capabilities for System Admins, District Officers, and Field Officers.
+* **Scheme Management**: End-to-end scheme creation, tracking, and budget allocation.
+* **Application Processing Workflow**: Multi-step verification workflow for beneficiary applications with comprehensive "remarks" history tracing for rejections/approvals.
+* **Analytics & Performance Tracking**: District-wise performance grading, pending counts, approval rates, and dynamic charting.
+* **Real-time Notification System**: Stay updated with vital alerts directly in the navigation hub.
 
-## 🚀 The Challenge (Problem Statement)
-Public welfare distribution often faces critical bottlenecks:
-- **Lack of Transparency**: Difficulty in tracking the exact stage of an application.
-- **Data Overload**: Officers overwhelmed by data outside their jurisdiction.
-- **Accountability Gaps**: Missing audit trails for why applications were approved or rejected.
-- **Manual Inefficiencies**: Fragmented communication between field units and central administration.
+## 🛠 Tech Stack
 
-## 💡 The Solution
-GSMS provides a **unified, multi-tenant digital ecosystem** that solves these issues through:
-1.  **Strict Data Isolation**: District and Field Officers only manage data within their assigned regions, preventing information clutter and ensuring security.
-2.  **Linear Approval Workflow**: A robust 3-stage verification process:
-    - **Field Officer**: On-ground verification and document checking.
-    - **District Officer**: Regional review and forwarding.
-    - **System Admin**: Final audit and fund disbursement.
-3.  **Auditable Remarks History**: Every decision point includes mandatory officer notes, creating a permanent, transparent history for every beneficiary.
-4.  **Actionable Intelligence**: Real-time dashboards provide heatmaps and performance metrics for admins to monitor scheme efficacy across the state.
+* **Frontend**: React.js with Vite, Lucide Icons, plain CSS.
+* **Backend**: Node.js, Express.js.
+* **Database**: PostgreSQL with Sequelize ORM.
 
----
+## 🚀 Getting Started
 
-## ✨ Key Features
-- **🔐 Secure RBAC (Role-Based Access Control)**: Custom-tailored views for Admin, District, and Field roles.
-- **📊 Real-time Analytics**: High-fidelity charts showing scheme targets, budget consumption, and district health.
-- **📝 Officer Registry**: Automated registration flow for new officers with regional assignments.
-- **🔔 Notification Hub**: Instant alerts for high-priority review tasks and approval milestones.
-- **✨ Premium UI/UX**: Professional "Glassmorphism" design system optimized for clarity and focus.
+### Prerequisites
+* Node.js (v16+)
+* PostgreSQL running locally on port `5432`
 
----
-
-## 🛠️ Technical Excellence (Tech Stack)
-
-### **Frontend**
-- **React 18**: Component-based architecture with Vite for high performance.
-- **Lucide React**: Modern, consistent iconography.
-- **Vibrant Glassmorphism**: Custom CSS design system for a premium look and feel.
-- **Axios & Context API**: Efficient state management and API communication.
-
-### **Backend**
-- **Node.js & Express**: High-concurrency server architecture.
-- **MongoDB & Mongoose**: Flexible, scalable document-based data storage.
-- **JWT & Bcrypt.js**: Industry-standard authentication and password security.
-- **Nodemon**: Optimized development workflow.
-
----
-
-## 📦 Installation & Setup
-
-### **Prerequisites**
-- Node.js (v16 or higher)
-- MongoDB (Local or Atlas)
-
-### **1. Clone & Install**
-```bash
-git clone https://github.com/Neemasree/Government-scheme-monitoring-system.git
-cd Government-scheme-monitoring-system
-```
-
-### **2. Backend Setup**
-Create a `.env` file in the `Backend` directory:
+### 1. Database Setup
+Create a PostgreSQL database named `govt_monitoring`.
+Update `backend/.env` with your PostgreSQL credentials:
 ```env
 PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-NODE_ENV=development
+DB_NAME=govt_monitoring
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
 ```
-Install dependencies and seed the database:
+
+### 2. Backend Initialization
+Install packages and seed the database with initial test data:
 ```bash
-cd Backend
+cd backend
 npm install
 npm run seed
 npm run dev
 ```
 
-### **3. Frontend Setup**
+### 3. Frontend Initialization
+In a separate terminal, start the React server:
 ```bash
-cd ../Frontend
+cd Frontend
 npm install
 npm run dev
 ```
 
----
+## 🔐 Default Test Accounts
 
-## 👤 Author
-**Neema Sree**
-*Aspiring Software Engineer focused on building impactful digital solutions for public infrastructure.*
+| Role | Email | Password |
+| :--- | :--- | :--- |
+| **System Admin** | `admin@govt.in` | `password123` |
+| **District Officer** | `district@govt.in` | `password123` |
+| **Field Officer** | `field@govt.in` | `password123` |
 
----
-
-*GSMS was built to bridge the gap between policy and people through technology.*
+## 📦 Recent Updates
+* Successfully migrated the entire persistence layer to **PostgreSQL**.
+* Revamped PostgreSQL Object Relational mapping for precise query mapping.
+* Optimized UI metrics mapping for the District Monitoring Hub.
+* Integrated strict schema structures tracking verification footprints.

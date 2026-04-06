@@ -18,10 +18,11 @@ const Applications = ({ role, searchTerm = '' }) => {
             const { data } = await api.get('/applications');
             const mappedData = data.map(app => ({
                 ...app,
-                id: app._id.slice(-6).toUpperCase(),
-                beneficiary: app.beneficiaryName,
-                scheme: app.schemeId?.schemeName || 'Unknown Scheme',
-                dateApplied: new Date(app.appliedDate).toLocaleDateString()
+                _id: String(app.id), // For any action references
+                id: String(app.id).padStart(6, '0').toUpperCase(),
+                beneficiary: app.beneficiary,
+                scheme: app.scheme,
+                dateApplied: new Date(app.dateApplied).toLocaleDateString()
             }));
             setData(mappedData);
         } catch (error) {
@@ -94,7 +95,8 @@ const Applications = ({ role, searchTerm = '' }) => {
         try {
             await api.put(`/applications/${app._id}/approve`, {
                 action: 'approve',
-                remark
+                remark,
+                role // Passed from user context via props
             });
             fetchApplications(); // Refresh list
             setIsModalOpen(false);
@@ -107,7 +109,8 @@ const Applications = ({ role, searchTerm = '' }) => {
         try {
             await api.put(`/applications/${app._id}/approve`, {
                 action: 'reject',
-                remark
+                remark,
+                role // Passed from user context via props
             });
             fetchApplications(); // Refresh list
             setIsModalOpen(false);
