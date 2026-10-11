@@ -7,6 +7,12 @@ const Application = sequelize.define('Application', {
     primaryKey: true,
     autoIncrement: true,
   },
+  beneficiaryUserId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'Users', key: 'id' },
+    onDelete: 'SET NULL',
+  },
   beneficiary: {
     type: DataTypes.STRING(150),
     allowNull: false,
@@ -48,6 +54,7 @@ const Application = sequelize.define('Application', {
     { fields: ['status'] },
     { fields: ['district', 'status'] },
     { fields: ['dateApplied'] },
+    { fields: ['beneficiaryUserId', 'dateApplied'] },
   ],
 });
 
