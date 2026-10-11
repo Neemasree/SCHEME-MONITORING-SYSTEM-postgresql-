@@ -10,7 +10,7 @@ const generateToken = (id) => {
     throw new Error('JWT_SECRET must be configured before issuing tokens');
   }
 
-  return jwt.sign({ id }, secret, { expiresIn: '30d' });
+  return jwt.sign({ id }, secret, { expiresIn: process.env.JWT_EXPIRES_IN || '2h' });
 };
 
 const normalizeEmail = (email) =>
@@ -18,6 +18,21 @@ const normalizeEmail = (email) =>
 
 const isValidPassword = (password) =>
   typeof password === 'string' && password.length >= 8 && password.length <= 128;
+
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const MAX_LOGIN_ATTEMPTS = 5;
+
+const getLoginAttempt = (key) => {
+  const now = Date.now();
+  const current = loginAttempts.get(key);
+  if (!current || now - current.startedAt >= LOGIN_WINDOW_MS) {
+    const fresh = { count: 0, startedAt: now };
+    loginAttempts.set(key, fresh);
+    return fresh;
+  }
+  return current;
+};
 
 // @desc Authenticate user and get token
 // @route POST /api/auth/login
@@ -29,16 +44,24 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ message: 'Email and password are required' });
   }
 
+  const attemptKey = `${req.ip || 'unknown'}:${email}`;
+  const attempt = getLoginAttempt(attemptKey);
+  if (attempt.count >= MAX_LOGIN_ATTEMPTS) {
+    return res.status(429).json({ message: 'Too many login attempts. Try again in 15 minutes.' });
+  }
+
   try {
     const user = await User.findOne({ where: { email } });
 
     if (!user || !(await user.matchPassword(password))) {
+      attempt.count += 1;
       return res.status(401).json({ message: 'Invalid email or password' });
     }
     if (!user.isActive) {
       return res.status(403).json({ message: 'This account has been deactivated' });
     }
 
+    loginAttempts.delete(attemptKey);
     const token = generateToken(user.id);
     return res.json({
       id: user.id,
