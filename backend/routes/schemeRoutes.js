@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Scheme = require('../models/Scheme');
+const User = require('../models/User');
 const { allowRoles } = require('../middleware/authMiddleware');
 
 const parsePositiveInt = (value, fallback, max = 100) => {
@@ -18,11 +19,17 @@ router.get('/', async (req, res) => {
   if (typeof req.query.status === 'string' && req.query.status.trim()) {
     where.status = req.query.status.trim();
   }
-  if (typeof req.query.district === 'string' && req.query.district.trim()) {
-    where.district = req.query.district.trim();
-  }
-
   try {
+    if (['district_officer', 'field_officer'].includes(req.user.role)) {
+      const user = await User.findByPk(req.user.id, { attributes: ['district'] });
+      if (!user?.district) {
+        return res.status(403).json({ message: 'No district is assigned to this account' });
+      }
+      where.district = user.district;
+    } else if (typeof req.query.district === 'string' && req.query.district.trim()) {
+      where.district = req.query.district.trim();
+    }
+
     const result = await Scheme.findAndCountAll({
       where,
       limit,
