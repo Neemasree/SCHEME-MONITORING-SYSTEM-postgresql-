@@ -11,6 +11,7 @@ import Reports from './pages/Reports/Reports';
 import Register from './pages/Register/Register';
 import Notifications from './pages/Notifications/Notifications';
 import BeneficiaryApplications from './pages/Beneficiary/BeneficiaryApplications';
+import UserManagement from './pages/Users/UserManagement';
 import { useAuth } from './context/AuthContext';
 import './index.css';
 
@@ -92,6 +93,7 @@ const App = () => {
               <Route path="applications" element={<Applications role="admin" searchTerm={globalSearch} />} />
               <Route path="districts" element={<Districts role="admin" />} />
               <Route path="reports" element={<Reports />} />
+              <Route path="users" element={<UserManagement />} />
               <Route path="notifications" element={<Notifications />} />
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
