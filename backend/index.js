@@ -34,6 +34,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/dashboard', authenticate, dashboardRoutes);
 app.use('/api/schemes', authenticate, (req, res, next) => {
   if (req.method === 'POST') return allowRoles('admin')(req, res, next);
+  if (req.method !== 'GET') return allowRoles('admin')(req, res, next);
   return next();
 }, schemeRoutes);
 app.use('/api/applications', authenticate, (req, res, next) => {
