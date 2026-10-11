@@ -1,14 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
-const { allowRoles } = require('../middleware/authMiddleware');
+const { Op } = require('sequelize');
 
-// Get notifications. User-specific visibility can be added when notifications
-// gain a recipient/user foreign key; current seeded data is role-labelled.
+// Recipients see their own workflow notifications plus legacy role-wide seed rows.
 router.get('/', async (req, res) => {
   try {
     const notifications = await Notification.findAll({
-      where: { role: req.user.role },
+      where: { [Op.or]: [{ userId: req.user.id }, { userId: null, role: req.user.role }] },
       order: [['createdAt', 'DESC']],
     });
 
@@ -24,7 +23,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Mark a notification as read only if it belongs to the authenticated user's role.
+// Mark only a notification addressed to this user (or a legacy role-wide row) as read.
 router.put('/:id/read', async (req, res) => {
   const id = Number.parseInt(req.params.id, 10);
   if (!Number.isInteger(id) || id <= 0) {
@@ -33,7 +32,7 @@ router.put('/:id/read', async (req, res) => {
 
   try {
     const notification = await Notification.findOne({
-      where: { id, role: req.user.role },
+      where: { id, [Op.or]: [{ userId: req.user.id }, { userId: null, role: req.user.role }] },
     });
 
     if (!notification) {
