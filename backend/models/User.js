@@ -36,6 +36,11 @@ const User = sequelize.define('User', {
     type: DataTypes.STRING(100),
     allowNull: true,
   },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: true,
+  },
 }, {
   hooks: {
     beforeCreate: async (user) => {
