@@ -28,7 +28,34 @@ const sequelize = new Sequelize(
 
 const connectDB = async () => {
   await sequelize.authenticate();
-  console.log('PostgreSQL database connected successfully.');
+
+  const requiredColumns = {
+    Users: ['isActive'],
+    Applications: ['beneficiaryUserId'],
+    Notifications: ['userId'],
+    AuditLogs: ['entityType', 'entityId', 'action', 'actorId', 'newStatus'],
+  };
+  const queryInterface = sequelize.getQueryInterface();
+
+  for (const [table, columns] of Object.entries(requiredColumns)) {
+    let description;
+    try {
+      description = await queryInterface.describeTable(table);
+    } catch {
+      throw new Error(
+        `Database schema is missing required table "${table}". Apply the current schema before starting the API.`,
+      );
+    }
+
+    const missingColumns = columns.filter((column) => !description[column]);
+    if (missingColumns.length > 0) {
+      throw new Error(
+        `Database table "${table}" is missing columns: ${missingColumns.join(', ')}. Apply the current schema before starting the API.`,
+      );
+    }
+  }
+
+  console.log('PostgreSQL connected and required schema verified.');
 };
 
 module.exports = { sequelize, connectDB };
