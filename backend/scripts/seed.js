@@ -17,12 +17,14 @@ const userData = [
     email: 'district@govt.in',
     password: 'password123',
     role: 'district_officer',
+    district: 'Salem',
   },
   {
     name: 'Field Officer',
     email: 'field@govt.in',
     password: 'password123',
     role: 'field_officer',
+    district: 'Salem',
   },
 ];
 const schemesData = [
