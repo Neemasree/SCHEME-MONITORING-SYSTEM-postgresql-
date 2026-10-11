@@ -1,29 +1,25 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
-
-const required = ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST', 'DB_PORT'];
-const missing = required.filter((key) => !process.env[key]);
-
-if (missing.length > 0) {
-  throw new Error(`Missing required database environment variables: ${missing.join(', ')}`);
-}
+const { env } = require('./env');
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME,
-  process.env.DB_USER,
-  process.env.DB_PASSWORD,
+  env.DB_NAME,
+  env.DB_USER,
+  env.DB_PASSWORD,
   {
-    host: process.env.DB_HOST,
+    host: env.DB_HOST,
     dialect: 'postgres',
-    port: Number(process.env.DB_PORT),
-    logging: process.env.SQL_LOGGING === 'true' ? console.log : false,
+    port: env.DB_PORT,
+    logging: env.SQL_LOGGING === 'true' ? console.log : false,
+    ...(env.NODE_ENV === 'production'
+      ? { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } } }
+      : {}),
     pool: {
-      max: Number(process.env.DB_POOL_MAX || 10),
+      max: env.DB_POOL_MAX,
       min: 0,
       acquire: 30000,
       idle: 10000,
     },
-  }
+  },
 );
 
 const connectDB = async () => {
