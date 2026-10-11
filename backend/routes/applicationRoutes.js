@@ -81,6 +81,37 @@ router.post('/', allowRoles('beneficiary'), async (req, res) => {
   }
 });
 
+router.get('/:id/history', async (req, res) => {
+  const id = Number.parseInt(req.params.id, 10);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ message: 'Invalid application ID' });
+  }
+
+  try {
+    const where = { id };
+    if (req.user.role === 'beneficiary') where.beneficiaryUserId = req.user.id;
+    if (['district_officer', 'field_officer'].includes(req.user.role)) {
+      const user = await User.findByPk(req.user.id, { attributes: ['district'] });
+      if (!user?.district) {
+        return res.status(403).json({ message: 'No district is assigned to this account' });
+      }
+      where.district = user.district;
+    }
+
+    const application = await Application.findOne({ where, attributes: ['id'] });
+    if (!application) return res.status(404).json({ message: 'Application not found' });
+
+    const history = await AuditLog.findAll({
+      where: { entityType: 'application', entityId: id },
+      order: [['createdAt', 'ASC'], ['id', 'ASC']],
+    });
+    return res.json(history);
+  } catch (error) {
+    console.error('Fetch application history failed:', error);
+    return res.status(500).json({ message: 'Unable to fetch application history' });
+  }
+});
+
 router.put(
   '/:id/approve',
   allowRoles('field_officer', 'district_officer', 'admin'),
