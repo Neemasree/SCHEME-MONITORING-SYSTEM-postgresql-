@@ -9,35 +9,50 @@ const User = sequelize.define('User', {
     autoIncrement: true,
   },
   name: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
+    validate: { notEmpty: true, len: [2, 100] },
   },
   email: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(254),
     allowNull: false,
     unique: true,
+    set(value) {
+      this.setDataValue('email', typeof value === 'string' ? value.trim().toLowerCase() : value);
+    },
+    validate: { isEmail: true },
   },
   password: {
     type: DataTypes.STRING,
     allowNull: false,
+    validate: { len: [8, 128] },
   },
   role: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM('admin', 'district_officer', 'field_officer', 'beneficiary'),
     allowNull: false,
+    defaultValue: 'beneficiary',
+  },
+  district: {
+    type: DataTypes.STRING(100),
+    allowNull: true,
   },
 }, {
   hooks: {
     beforeCreate: async (user) => {
-      if (user.password) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
+      if (user.password && !user.password.startsWith('$2a$') && !user.password.startsWith('$2b$')) {
+        user.password = await bcrypt.hash(user.password, await bcrypt.genSalt(10));
       }
-    }
-  }
+    },
+    beforeUpdate: async (user) => {
+      if (user.changed('password') && user.password) {
+        user.password = await bcrypt.hash(user.password, await bcrypt.genSalt(10));
+      }
+    },
+  },
 });
 
 User.prototype.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
+  return bcrypt.compare(enteredPassword, this.password);
 };
 
 module.exports = User;
