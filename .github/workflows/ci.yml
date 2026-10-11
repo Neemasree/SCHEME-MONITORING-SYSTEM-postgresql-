@@ -26,10 +26,11 @@ jobs:
         run: npm ci
       - name: Lint
         run: npm run lint
-      - name: Dependency audit
-        run: npm audit --audit-level=high
       - name: Build
         run: npm run build
+      - name: Dependency audit
+        if: always()
+        run: npm audit --audit-level=high
 
   backend:
     name: Backend syntax and PostgreSQL integration tests
@@ -74,8 +75,6 @@ jobs:
           find . -path './node_modules' -prune -o -name '*.js' -type f -print0 | xargs -0 -n1 node --check
       - name: Backend lint
         run: npm run lint
-      - name: Dependency audit
-        run: npm audit --audit-level=high
       - name: Apply database migrations
         run: npm run migrate
       - name: Seed disposable CI database
@@ -89,3 +88,6 @@ jobs:
           name: backend-coverage
           path: backend/coverage/
           if-no-files-found: ignore
+      - name: Dependency audit
+        if: always()
+        run: npm audit --audit-level=high
