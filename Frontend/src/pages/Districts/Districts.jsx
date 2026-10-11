@@ -5,7 +5,7 @@ import api from '../../utils/api';
 import { MapPin, TrendingUp, AlertTriangle } from 'lucide-react';
 import './Districts.css';
 
-const Districts = ({ role }) => {
+const Districts = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [performance, setPerformance] = useState([]);
 
