@@ -6,15 +6,18 @@ import './Notifications.css';
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
     const fetchAllNotifications = async () => {
         setIsLoading(true);
+        setError('');
         try {
             // Request with a higher limit for the main page
             const { data } = await api.get('/notifications?limit=100');
             setNotifications(data);
-        } catch (error) {
-            console.error("Error fetching all notifications:", error);
+        } catch (requestError) {
+            console.error("Error fetching all notifications:", requestError);
+            setError(requestError.response?.data?.message || 'Unable to load notifications.');
         } finally {
             setIsLoading(false);
         }
@@ -27,9 +30,10 @@ const Notifications = () => {
     const handleMarkRead = async (id) => {
         try {
             await api.put(`/notifications/${id}/read`);
-            setNotifications(notifications.map(n => n._id === id ? { ...n, isRead: true } : n));
-        } catch (error) {
-            console.error("Error marking notification as read:", error);
+            setNotifications((current) => current.map((n) => n._id === id ? { ...n, isRead: true } : n));
+        } catch (requestError) {
+            console.error("Error marking notification as read:", requestError);
+            setError(requestError.response?.data?.message || 'Unable to mark this notification as read.');
         }
     };
 
@@ -64,6 +68,13 @@ const Notifications = () => {
                 )}
             </div>
 
+            {error && (
+                <div className="error-banner" role="alert">
+                    <span>{error}</span>
+                    <button type="button" onClick={fetchAllNotifications}>Try again</button>
+                </div>
+            )}
+
             <div className="notifications-container slideUp">
                 {isLoading ? (
                     <div className="notif-loading">
@@ -77,6 +88,15 @@ const Notifications = () => {
                                 key={notif._id} 
                                 className={`notif-card glass-card ${!notif.isRead ? 'unread' : ''}`}
                                 onClick={() => !notif.isRead && handleMarkRead(notif._id)}
+                                role={!notif.isRead ? 'button' : undefined}
+                                tabIndex={!notif.isRead ? 0 : undefined}
+                                onKeyDown={(event) => {
+                                    if (!notif.isRead && (event.key === 'Enter' || event.key === ' ')) {
+                                        event.preventDefault();
+                                        handleMarkRead(notif._id);
+                                    }
+                                }}
+                                aria-label={!notif.isRead ? `Mark notification as read: ${notif.title}` : undefined}
                             >
                                 <div className="notif-card-icon">
                                     {getIcon(notif.type)}
