@@ -5,7 +5,6 @@ const Scheme = require('./Scheme');
 const Application = require('./Application');
 const AuditLog = require('./AuditLog');
 const Notification = require('./Notification');
-const DistrictPerformance = require('./Performance');
 
 module.exports = {
   User,
@@ -13,5 +12,4 @@ module.exports = {
   Application,
   AuditLog,
   Notification,
-  DistrictPerformance,
 };
