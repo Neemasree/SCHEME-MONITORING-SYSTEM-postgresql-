@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: civictrack-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm run migrate && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "5432"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 2h
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: SQL_LOGGING
+        value: "false"
+      - key: DB_POOL_MAX
+        value: "10"
