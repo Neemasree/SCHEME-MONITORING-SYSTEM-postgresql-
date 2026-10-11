@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 const { authenticate, allowRoles } = require('../middleware/authMiddleware');
 const { authLimiter } = require('../middleware/rateLimiters');
 const { env } = require('../config/env');
+const validate = require('../middleware/validate');
+const { loginSchema, registerSchema, createUserSchema } = require('../validation/schemas');
 
 const generateToken = (id) => {
   return jwt.sign({ id }, env.JWT_SECRET, { expiresIn: env.JWT_EXPIRES_IN });
@@ -18,7 +20,7 @@ const isValidPassword = (password) =>
 
 // @desc Authenticate user and get token
 // @route POST /api/auth/login
-router.post('/login', authLimiter, async (req, res) => {
+router.post('/login', authLimiter, validate(loginSchema), async (req, res) => {
   const email = normalizeEmail(req.body?.email);
   const password = req.body?.password;
 
@@ -55,7 +57,7 @@ router.post('/login', authLimiter, async (req, res) => {
 // an unauthenticated request. Add an authenticated admin-only user-management
 // endpoint before enabling officer self-service provisioning.
 // @route POST /api/auth/register
-router.post('/register', authLimiter, async (req, res) => {
+router.post('/register', authLimiter, validate(registerSchema), async (req, res) => {
   const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
   const email = normalizeEmail(req.body?.email);
   const password = req.body?.password;
@@ -113,7 +115,7 @@ router.get('/users', authenticate, allowRoles('admin'), async (_req, res) => {
   }
 });
 
-router.post('/users', authenticate, allowRoles('admin'), async (req, res) => {
+router.post('/users', authenticate, allowRoles('admin'), validate(createUserSchema), async (req, res) => {
   const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
   const email = normalizeEmail(req.body?.email);
   const password = req.body?.password;
