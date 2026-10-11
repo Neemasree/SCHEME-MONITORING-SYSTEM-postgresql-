@@ -128,7 +128,7 @@ router.put(
       await AuditLog.create({
         entityType: 'application',
         entityId: application.id,
-        action: action === 'approve' ? 'application_approved' : 'application_rejected',
+        action: action === 'reject' ? 'application_rejected' : status === 'Approved' ? 'application_approved' : 'application_forwarded',
         actorId: req.user.id,
         actorRole: req.user.role,
         previousStatus,
