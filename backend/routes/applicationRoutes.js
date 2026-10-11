@@ -6,6 +6,8 @@ const User = require('../models/User');
 const Scheme = require('../models/Scheme');
 const Notification = require('../models/Notification');
 const { allowRoles } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { applicationSchema, approvalSchema } = require('../validation/schemas');
 
 const parsePositiveInt = (value, fallback, max = 100) => {
   const parsed = Number.parseInt(value, 10);
@@ -108,7 +110,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', allowRoles('beneficiary'), async (req, res) => {
+router.post('/', allowRoles('beneficiary'), validate(applicationSchema), async (req, res) => {
   const schemeId = Number.parseInt(req.body?.schemeId, 10);
   if (!Number.isInteger(schemeId) || schemeId <= 0) {
     return res.status(400).json({ message: 'A valid scheme is required' });
@@ -186,6 +188,7 @@ router.get('/:id/history', async (req, res) => {
 router.put(
   '/:id/approve',
   allowRoles('field_officer', 'district_officer', 'admin'),
+  validate(approvalSchema),
   async (req, res) => {
     const id = Number.parseInt(req.params.id, 10);
     const { action, remark } = req.body || {};
