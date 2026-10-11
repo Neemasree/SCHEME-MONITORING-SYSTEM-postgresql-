@@ -89,7 +89,7 @@ const Register = () => {
                                 id="password"
                                 type="password"
                                 name="password"
-                                placeholder="At least 8 characters"
+                                placeholder="At least 12 characters, with upper/lowercase letters and a number"
                                 value={formData.password}
                                 onChange={handleChange}
                                 autoComplete="new-password"
