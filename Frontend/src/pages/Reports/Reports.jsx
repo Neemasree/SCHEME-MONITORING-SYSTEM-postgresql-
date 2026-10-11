@@ -5,7 +5,7 @@ import api from '../../utils/api';
 import './Reports.css';
 
 const Reports = () => {
-    const [isLoading, setIsLoading] = useState(true);
+    const [, setIsLoading] = useState(true);
     const [analytics, setAnalytics] = useState({ schemeData: [], statusData: [], districtStats: [], trendData: [] });
 
     useEffect(() => {
