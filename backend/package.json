@@ -8,7 +8,7 @@
     "dev": "nodemon index.js",
     "seed": "node scripts/seed.js",
     "migrate": "node scripts/migrate.js",
-    "test": "jest --runInBand",
+    "test": "jest --runInBand --coverage",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -50,6 +50,22 @@
     ],
     "*.{json,md,yml,yaml}": [
       "prettier --write"
+    ]
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverageFrom": [
+      "**/*.js",
+      "!node_modules/**",
+      "!coverage/**",
+      "!tests/**",
+      "!eslint.config.js"
+    ],
+    "coverageDirectory": "coverage",
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "html"
     ]
   }
 }
