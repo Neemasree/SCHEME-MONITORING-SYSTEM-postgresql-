@@ -12,6 +12,7 @@ import Register from './pages/Register/Register';
 import Notifications from './pages/Notifications/Notifications';
 import BeneficiaryApplications from './pages/Beneficiary/BeneficiaryApplications';
 import UserManagement from './pages/Users/UserManagement';
+import NotFound from './pages/NotFound';
 import { useAuth } from './context/AuthContext';
 import './index.css';
 
@@ -20,13 +21,14 @@ const homePathForRole = (role) => {
   if (role === 'district_officer') return '/district/dashboard';
   if (role === 'field_officer') return '/field/dashboard';
   if (role === 'beneficiary') return '/beneficiary/applications';
-  return '/admin/dashboard';
+  if (role === 'admin') return '/admin/dashboard';
+  return null;
 };
 
 const RequireRole = ({ user, allowedRoles, children }) => {
   if (!user) return <Navigate to="/login" replace />;
   if (!allowedRoles.includes(user.role)) {
-    return <Navigate to={homePathForRole(user.role)} replace />;
+    return <Navigate to={homePathForRole(user.role) || '/login'} replace />;
   }
   return children;
 };
@@ -145,9 +147,9 @@ const App = () => {
 
         {/* Root Redirect Catch-all */}
         <Route path="/" element={
-          <Navigate to={user ? homePathForRole(user.role) : "/login"} replace />
+          <Navigate to={user ? (homePathForRole(user.role) || "/login") : "/login"} replace />
         } />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
