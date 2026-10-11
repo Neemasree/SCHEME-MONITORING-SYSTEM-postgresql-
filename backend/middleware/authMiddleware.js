@@ -17,10 +17,10 @@ const authenticate = async (req, res, next) => {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(payload.id, {
-      attributes: ['id', 'name', 'email', 'role'],
+      attributes: ['id', 'name', 'email', 'role', 'isActive'],
     });
 
-    if (!user) {
+    if (!user || !user.isActive) {
       return res.status(401).json({ message: 'Invalid authentication token' });
     }
 
