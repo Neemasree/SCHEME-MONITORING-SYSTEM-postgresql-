@@ -93,7 +93,7 @@ const Register = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 autoComplete="new-password"
-                                minLength={8}
+                                minLength={12}
                                 maxLength={128}
                                 required
                             />
