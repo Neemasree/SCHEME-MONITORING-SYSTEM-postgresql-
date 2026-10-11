@@ -151,7 +151,7 @@ const seedDatabase = async () => {
     for (const table of tables) {
       try {
         await sequelize.query(`SELECT setval('"${table}_id_seq"', (SELECT MAX(id) FROM "${table}"))`);
-      } catch (e) {
+      } catch {
         // Safe to ignore if table uses different sequences or doesn't exist
       }
     }
