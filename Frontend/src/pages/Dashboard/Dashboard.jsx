@@ -8,11 +8,13 @@ import './Dashboard.css';
 const Dashboard = ({ role, username }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [stats, setStats] = useState(null);
-    const [analytics, setAnalytics] = useState({ statusData: [], schemeData: [] });
+    const [analytics, setAnalytics] = useState({ statusData: [], schemeData: [], districtStats: [], trendData: [] });
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             setIsLoading(true);
+            setError('');
             try {
                 const [statsRes, analyticsRes] = await Promise.all([
                     api.get('/dashboard/stats'),
@@ -21,8 +23,9 @@ const Dashboard = ({ role, username }) => {
 
                 setStats(statsRes.data);
                 setAnalytics(analyticsRes.data);
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
+            } catch (requestError) {
+                console.error("Error fetching dashboard data:", requestError);
+                setError(requestError.response?.data?.message || 'Unable to load dashboard data. Please try again.');
             } finally {
                 setIsLoading(false);
             }
@@ -44,6 +47,8 @@ const Dashboard = ({ role, username }) => {
                 <p className="page-subtitle">{greeting[role] || greeting.field}</p>
             </div>
 
+            {error && <div className="error-banner" role="alert">{error}</div>}
+
             <DashboardCards role={role} isLoading={isLoading} stats={stats} />
 
             <div className="charts-grid animate-fade-in" style={{ animationDelay: '0.2s' }}>
@@ -64,7 +69,7 @@ const Dashboard = ({ role, username }) => {
                     {isLoading ? <SkeletonChart /> : (
                         <LineGraph
                             data={analytics.trendData}
-                            title="Application Inflow Trend (6 Months)"
+                            title="Application Inflow Trend (All Available Months)"
                             dataKey="applications"
                             xAxisKey="month"
                         />
