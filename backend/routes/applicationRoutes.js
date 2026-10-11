@@ -2,11 +2,21 @@ const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
+const User = require('../models/User');
 const { allowRoles } = require('../middleware/authMiddleware');
 
 router.get('/', async (req, res) => {
   try {
-    const applications = await Application.findAll();
+    const scope = {};
+    if (req.user.role === 'district_officer') {
+      const user = await User.findByPk(req.user.id, { attributes: ['district'] });
+      if (!user?.district) {
+        return res.status(403).json({ message: 'No district is assigned to this account' });
+      }
+      scope.district = user.district;
+    }
+
+    const applications = await Application.findAll({ where: scope });
 
     const formatted = applications.map((app) => ({
       ...app.get({ plain: true }),
@@ -46,6 +56,17 @@ router.put(
 
     if (action === 'reject' && !remark?.trim()) {
       return res.status(400).json({ message: 'A reason is required when rejecting an application' });
+    }
+
+    if (req.user.role === 'district_officer') {
+      const user = await User.findByPk(req.user.id, { attributes: ['district'] });
+      if (!user?.district) {
+        return res.status(403).json({ message: 'No district is assigned to this account' });
+      }
+      const visibleApplication = await Application.findOne({ where: { id, district: user.district } });
+      if (!visibleApplication) {
+        return res.status(404).json({ message: 'Application not found' });
+      }
     }
 
     const transaction = await Application.sequelize.transaction();
