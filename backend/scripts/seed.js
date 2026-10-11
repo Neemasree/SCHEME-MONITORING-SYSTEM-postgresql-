@@ -127,9 +127,12 @@ const seedDatabase = async () => {
     await sequelize.authenticate();
     console.log('Connected to PostgreSQL for seeding.');
 
-    // Force sync to reset the DB for initial development
-    await sequelize.sync({ force: true });
-    console.log('All models synchronized with the database.');
+    // The migration runner owns schema changes; seeding must not drop tables.
+    try {
+      await sequelize.getQueryInterface().describeTable('AuditLogs');
+    } catch {
+      throw new Error('Schema is not initialized. Run "npm run migrate" before seeding.');
+    }
 
     await User.bulkCreate(userData, { individualHooks: true });
     console.log('Users data seeded.');
