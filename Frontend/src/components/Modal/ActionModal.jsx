@@ -3,7 +3,7 @@ import StatusBadge from '../Badge/StatusBadge';
 import './ActionModal.css';
 import { useState } from 'react';
 
-const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role }) => {
+const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history = [] }) => {
     const [remarks, setRemarks] = useState('');
 
     if (!isOpen || !data) return null;
@@ -91,6 +91,32 @@ const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role }) => {
                             </div>
                         </div>
                     )}
+
+                    <div className="remarks-history-section">
+                        <h3 className="section-title">Audit Timeline</h3>
+                        {history.length > 0 ? (
+                            <ol className="remarks-list">
+                                {history.map((entry) => (
+                                    <li key={entry.id} className="remark-item glass-card">
+                                        <div className="remark-header">
+                                            <span className={`role-tag ${entry.actorRole || ''}`}>
+                                                {String(entry.actorRole || 'system').replaceAll('_', ' ')}
+                                            </span>
+                                            <span className="remark-date">
+                                                <Clock size={12} /> {entry.createdAt ? new Date(entry.createdAt).toLocaleString() : 'Time unavailable'}
+                                            </span>
+                                        </div>
+                                        <p className="remark-text">
+                                            <strong>{String(entry.action || 'updated').replaceAll('_', ' ')}</strong>
+                                            {entry.previousStatus ? ` — ${entry.previousStatus}` : ''}
+                                            {entry.newStatus ? ` → ${entry.newStatus}` : ''}
+                                        </p>
+                                        {entry.remark && <p>{entry.remark}</p>}
+                                    </li>
+                                ))}
+                            </ol>
+                        ) : <p>No audit events are available yet.</p>}
+                    </div>
 
                     {data.remarks && data.remarks.length > 0 && (
                         <div className="remarks-history-section">
