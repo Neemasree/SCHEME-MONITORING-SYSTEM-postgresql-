@@ -1,4 +1,5 @@
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const app = require('../index');
 const { sequelize } = require('../config/db');
 require('../models');
@@ -42,6 +43,57 @@ describe('CivicTrack API integration', () => {
   test('protects application APIs from unauthenticated requests', async () => {
     const response = await request(app).get('/api/applications');
     expect(response.status).toBe(401);
+  });
+
+  test('rejects malformed login input with a validation error', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'not-an-email', password: '' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  test('rejects expired access tokens', async () => {
+    const expiredToken = jwt.sign(
+      { id: 1, exp: Math.floor(Date.now() / 1000) - 60 },
+      process.env.JWT_SECRET,
+    );
+    const response = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${expiredToken}`);
+
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('UNAUTHORIZED');
+  });
+
+  test('blocks beneficiaries from admin user management', async () => {
+    const response = await request(app)
+      .get('/api/auth/users')
+      .set('Authorization', `Bearer ${beneficiaryToken}`);
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('FORBIDDEN');
+  });
+
+  test('rejects invalid application payloads before database writes', async () => {
+    const response = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${beneficiaryToken}`)
+      .send({ schemeId: -3, unexpected: true });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  test('requires a remark when rejecting an application', async () => {
+    const response = await request(app)
+      .put('/api/applications/101/approve')
+      .set('Authorization', `Bearer ${fieldToken}`)
+      .send({ action: 'reject' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
   });
 
   test('limits field officer application results to the assigned district', async () => {
