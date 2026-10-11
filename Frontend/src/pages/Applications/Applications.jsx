@@ -12,6 +12,7 @@ const Applications = ({ role, searchTerm = '' }) => {
     const [statusFilter, setStatusFilter] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
+    const [history, setHistory] = useState([]);
 
     const fetchApplications = async () => {
         setIsLoading(true);
@@ -40,6 +41,22 @@ const Applications = ({ role, searchTerm = '' }) => {
     useEffect(() => {
         fetchApplications();
     }, []);
+
+    useEffect(() => {
+        if (!selectedApp?._id || !isModalOpen) {
+            setHistory([]);
+            return;
+        }
+        let cancelled = false;
+        api.get(`/applications/${selectedApp._id}/history`)
+            .then(({ data: rows }) => {
+                if (!cancelled) setHistory(Array.isArray(rows) ? rows : []);
+            })
+            .catch(() => {
+                if (!cancelled) setHistory([]);
+            });
+        return () => { cancelled = true; };
+    }, [selectedApp, isModalOpen]);
 
     const columns = [
         { header: 'App ID', key: 'id' },
@@ -135,7 +152,9 @@ const Applications = ({ role, searchTerm = '' }) => {
             {selectedApp && (
                 <ActionModal
                     isOpen={isModalOpen}
-                    application={selectedApp}
+                    data={selectedApp}
+                    role={role}
+                    history={history}
                     onClose={() => {
                         setIsModalOpen(false);
                         setSelectedApp(null);
