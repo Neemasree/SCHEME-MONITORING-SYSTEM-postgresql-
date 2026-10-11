@@ -75,7 +75,7 @@ const UserManagement = () => {
             <form onSubmit={createUser} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 14, padding: 20, border: '1px solid #d9e1ec', borderRadius: 12, marginBottom: 28 }}>
                 <label>Name<input name="name" value={form.name} onChange={changeField} minLength={2} maxLength={100} required /></label>
                 <label>Email<input name="email" type="email" value={form.email} onChange={changeField} maxLength={254} required /></label>
-                <label>Temporary password<input name="password" type="password" value={form.password} onChange={changeField} minLength={8} maxLength={128} required /></label>
+                <label>Temporary password<input name="password" type="password" value={form.password} onChange={changeField} minLength={12} maxLength={128} required /></label>
                 <label>Role
                     <select name="role" value={form.role} onChange={changeField}>
                         <option value="field_officer">Field officer</option>
