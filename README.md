@@ -79,6 +79,9 @@ DB_PASSWORD=replace_with_your_local_password
 DB_HOST=localhost
 DB_PORT=5432
 JWT_SECRET=replace_with_a_long_random_secret
+CLIENT_ORIGIN=http://localhost:5173
+SQL_LOGGING=false
+DB_POOL_MAX=10
 ```
 
 Never commit real credentials or production secrets. Configure environment variables in your deployment platform as well.
