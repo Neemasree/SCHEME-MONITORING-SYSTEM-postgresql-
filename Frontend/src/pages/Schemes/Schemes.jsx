@@ -10,21 +10,25 @@ const Schemes = ({ role, searchTerm = '' }) => {
     const [data, setData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [error, setError] = useState('');
+    const [refreshKey, setRefreshKey] = useState(0);
 
     const fetchSchemes = async () => {
         setIsLoading(true);
+        setError('');
         try {
-            const { data } = await api.get('/schemes');
-            // Map backend fields to UI keys
-            const mappedData = data.map(s => ({
-                ...s,
-                id: String(s.id).padStart(6, '0').toUpperCase(), // Short ID for display
-                name: s.schemeName || s.name,
-                budget: s.budget, // Already stored as string e.g. "₹500 Crores"
-            }));
-            setData(mappedData);
-        } catch (error) {
-            console.error("Error fetching schemes:", error);
+            const response = await api.get('/schemes', { params: { limit: 100 } });
+            // The API now returns { data, pagination }; accept the legacy array shape too.
+            const rows = Array.isArray(response.data) ? response.data : response.data.data || [];
+            setData(rows.map((scheme) => ({
+                ...scheme,
+                id: String(scheme.id).padStart(6, '0').toUpperCase(),
+                name: scheme.schemeName || scheme.name || 'Unnamed scheme',
+                district: scheme.district || '—',
+                budget: scheme.budget ?? '—',
+            })));
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || 'Unable to load schemes.');
         } finally {
             setIsLoading(false);
         }
@@ -32,7 +36,7 @@ const Schemes = ({ role, searchTerm = '' }) => {
 
     useEffect(() => {
         fetchSchemes();
-    }, []);
+    }, [refreshKey]);
 
     const columns = [
         { header: 'Scheme ID', key: 'id' },
@@ -44,36 +48,25 @@ const Schemes = ({ role, searchTerm = '' }) => {
         { header: 'Details', key: 'action', align: 'center' },
     ];
 
-    const getFilteredData = () => {
-        let filtered = data;
-
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            filtered = filtered.filter(app =>
-                app.name.toLowerCase().includes(term) ||
-                app.district.toLowerCase().includes(term) ||
-                app.id.includes(term)
-            );
-        }
-
-        return filtered;
-    };
+    const term = searchTerm.trim().toLowerCase();
+    const filteredData = data.filter((scheme) =>
+        !term ||
+        String(scheme.name).toLowerCase().includes(term) ||
+        String(scheme.district).toLowerCase().includes(term) ||
+        String(scheme.id).toLowerCase().includes(term)
+    );
 
     const handleActionClick = (row) => {
-        alert(`Details for ${row.name}:\n${row.description}`);
-    };
-
-    const handleAddScheme = () => {
-        setIsModalOpen(true);
+        window.alert(`Details for ${row.name}:\n${row.description || 'No description provided.'}`);
     };
 
     const handleSaveScheme = async (newScheme) => {
         try {
             await api.post('/schemes', newScheme);
-            fetchSchemes(); // Refresh list after saving
-        } catch (error) {
-            console.error("Error saving scheme:", error);
-            alert("Failed to save scheme. Please try again.");
+            setIsModalOpen(false);
+            setRefreshKey((key) => key + 1);
+        } catch (requestError) {
+            window.alert(requestError.response?.data?.message || 'Failed to save scheme. Please try again.');
         }
     };
 
@@ -82,23 +75,21 @@ const Schemes = ({ role, searchTerm = '' }) => {
             <div className="page-header animate-fade-in flex-between">
                 <div>
                     <h1 className="page-title">Government Schemes</h1>
-                    <p className="page-subtitle">View and manage all active schemes and allocations</p>
+                    <p className="page-subtitle">View and manage schemes and allocations</p>
                 </div>
-
                 {role === 'admin' && (
-                    <button className="btn-primary animate-fade-in" onClick={handleAddScheme}>
+                    <button className="btn-primary animate-fade-in" onClick={() => setIsModalOpen(true)}>
                         <Plus size={18} /> New Scheme
                     </button>
                 )}
             </div>
 
+            {error && <div className="error-banner" role="alert">{error}</div>}
             <div className="schemes-content slideUp" style={{ animationDelay: '0.1s' }}>
-                {isLoading ? (
-                    <SkeletonTable rows={8} />
-                ) : (
+                {isLoading ? <SkeletonTable rows={8} /> : (
                     <StatusTable
                         columns={columns}
-                        data={getFilteredData()}
+                        data={filteredData}
                         onActionClick={handleActionClick}
                         itemsPerPage={8}
                     />
