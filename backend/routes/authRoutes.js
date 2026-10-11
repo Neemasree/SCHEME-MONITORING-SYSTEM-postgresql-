@@ -16,7 +16,7 @@ const normalizeEmail = (email) =>
   typeof email === 'string' ? email.trim().toLowerCase() : '';
 
 const isValidPassword = (password) =>
-  typeof password === 'string' && password.length >= 8 && password.length <= 128;
+  typeof password === 'string' && password.length >= 12 && password.length <= 128;
 
 // @desc Authenticate user and get token
 // @route POST /api/auth/login
@@ -71,7 +71,7 @@ router.post('/register', authLimiter, validate(registerSchema), async (req, res)
   }
 
   if (!isValidPassword(password)) {
-    return res.status(400).json({ message: 'Password must be between 8 and 128 characters' });
+    return res.status(400).json({ message: 'Password must be between 12 and 128 characters' });
   }
 
   try {
