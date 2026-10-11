@@ -3,7 +3,7 @@ import StatusBadge from '../Badge/StatusBadge';
 import './ActionModal.css';
 import { useState } from 'react';
 
-const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history = [] }) => {
+const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history = [], actionError = '' }) => {
     const [remarks, setRemarks] = useState('');
 
     if (!isOpen || !data) return null;
@@ -46,6 +46,7 @@ const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history
                 </div>
 
                 <div className="modal-body">
+                    {actionError && <div className="login-error-alert" role="alert">{actionError}</div>}
                     <div className="details-grid">
                         <div className="detail-group">
                             <span className="detail-label">Application ID</span>
