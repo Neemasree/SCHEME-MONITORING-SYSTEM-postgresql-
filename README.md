@@ -4,7 +4,7 @@
 
 CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
 
-> **Status:** Development project. CI currently checks frontend lint/build and backend JavaScript syntax. PostgreSQL integration tests, production deployment, and role-specific screenshots are still pending; no live URL is claimed here.
+> **Status:** Development project. GitHub Actions is configured for frontend lint/build and PostgreSQL-backed API integration tests; verify the latest run on the Actions page before treating it as green. Docker Compose is available for local evaluation. No hosted production URL is claimed because deployment has not been verified.
 
 ## What it does
 
@@ -24,6 +24,7 @@ CivicTrack is a student full-stack project for managing public-benefit schemes a
 - **Database/ORM:** PostgreSQL, Sequelize
 - **Authentication:** JWT, bcryptjs
 - **Automation:** GitHub Actions
+- **Local containers:** Docker, Docker Compose, Nginx
 
 ## Architecture
 
@@ -182,6 +183,26 @@ The seed script currently creates these local-only officer accounts:
 
 Register a beneficiary through the UI. **Change/remove these credentials before any shared or deployed demo.**
 
+## Run the full stack with Docker
+
+Prerequisite: Docker Desktop (or Docker Engine with the Compose plugin).
+
+```bash
+docker compose up --build
+```
+
+Open the frontend at `http://localhost:8080`. The API is also exposed at `http://localhost:5000`, and its database-aware health endpoint is `http://localhost:5000/health`.
+
+The first startup runs the database migration command automatically. To add local demo users and sample data, open another terminal and run:
+
+```bash
+docker compose exec backend npm run seed
+```
+
+The default Compose credentials are for local development only. Set `DB_PASSWORD` and `JWT_SECRET` in your shell or an untracked `.env` file before sharing the environment. Never expose the default credentials to the internet. The seed script is not intended for production data.
+
+Stop the stack with `docker compose down`; retain the local database volume. To remove the database volume too, use `docker compose down -v` (this permanently deletes local database data).
+
 ## API overview
 
 All routes below are under `/api`, except `/health`. Protected routes require `Authorization: Bearer <token>`.
@@ -210,20 +231,20 @@ All routes below are under `/api`, except `/health`. Protected routes require `A
 GitHub Actions is configured to run:
 - ESLint and Vite production build for the frontend.
 - Backend JavaScript syntax checks.
-- Schema migration and development seed against a PostgreSQL 16 service container.
-- Jest/Supertest API integration tests for authentication, district isolation, date filters, the full approval workflow, audit history, and beneficiary notifications.
+- Schema migration and development seeding against a PostgreSQL 16 service container.
+- Jest/Supertest API integration tests for authentication, district isolation, date filters, approval workflow, audit history, and beneficiary notifications.
 
-Check the [Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for the latest run result. The changes have been committed, but I have not verified a completed green run from this session.
+The test suite and CI job are committed, but a green run must be confirmed on the [Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions). Do not treat a configured test as a passing test until the run finishes successfully.
 
 ## Evidence and deployment status
 
 - **Screenshots/GIF:** to be added after each role is run against a seeded database.
-- **Live deployment:** not yet configured. Vercel + Render + managed PostgreSQL and Docker Compose remain follow-up tasks.
+- **Live deployment:** not yet verified. Vercel + Render + Neon require connected hosting accounts, production environment variables, and a successful deployment; this README does not claim a live URL.
 - **Repository topics/description:** should be set in GitHub repository settings.
 
 ## Security note
 
-This project is not approved for real beneficiary or sensitive personal data. Before production use, complete and verify database migrations, login rate limiting, security headers, short-lived tokens, centralized error handling, automated integration tests, backups, privacy review, and a deployment secrets review.
+This project is not approved for real beneficiary or sensitive personal data. Before production use, verify the database migration strategy, automated integration tests, rate-limit behavior behind the actual proxy, security headers, token/session strategy, backups, privacy review, and deployment secrets. Use a managed PostgreSQL SSL connection and replace all local demo credentials.
 
 ## License
 
