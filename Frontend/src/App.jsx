@@ -10,6 +10,7 @@ import Districts from './pages/Districts/Districts';
 import Reports from './pages/Reports/Reports';
 import Register from './pages/Register/Register';
 import Notifications from './pages/Notifications/Notifications';
+import BeneficiaryApplications from './pages/Beneficiary/BeneficiaryApplications';
 import { useAuth } from './context/AuthContext';
 import './index.css';
 
@@ -125,6 +126,18 @@ const App = () => {
               <Route path="*" element={<Navigate to="dashboard" replace />} />
             </Routes>
           </PortalLayout>
+          </RequireRole>
+        } />
+
+        {/* Beneficiary Routes */}
+        <Route path="/beneficiary/*" element={
+          <RequireRole user={user} allowedRoles={['beneficiary']}>
+            <PortalLayout user={user} logout={logout} onSearchItem={setGlobalSearch}>
+              <Routes>
+                <Route path="applications" element={<BeneficiaryApplications username={user?.name} />} />
+                <Route path="*" element={<Navigate to="applications" replace />} />
+              </Routes>
+            </PortalLayout>
           </RequireRole>
         } />
 
