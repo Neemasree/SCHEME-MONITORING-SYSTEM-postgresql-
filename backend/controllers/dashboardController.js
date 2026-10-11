@@ -1,4 +1,4 @@
-const { Op, fn, col, literal } = require('sequelize');
+const { Op, fn, col, literal, QueryTypes } = require('sequelize');
 const Scheme = require('../models/Scheme');
 const Application = require('../models/Application');
 const { sequelize } = require('../config/db');
@@ -96,7 +96,7 @@ exports.getAnalytics = async (req, res) => {
             endDate: /^\d{4}-\d{2}-\d{2}$/.test(endDate || '') ? endDate : null,
             district: typeof district === 'string' && district.trim() ? district.trim() : null,
           },
-          type: require('sequelize').QueryTypes.SELECT,
+          type: QueryTypes.SELECT,
         }
       ),
     ]);
