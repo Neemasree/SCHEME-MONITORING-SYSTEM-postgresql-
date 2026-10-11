@@ -20,7 +20,7 @@ CivicTrack is a student full-stack project for managing public-benefit schemes a
 ## Stack
 
 - **Frontend:** React, Vite, React Router, Axios, Recharts
-- **Backend:** Node.js, Express
+- **Backend:** Node.js, Express, Helmet, Zod, Swagger UI
 - **Database/ORM:** PostgreSQL, Sequelize
 - **Authentication:** JWT, bcryptjs
 - **Automation:** GitHub Actions, ESLint, Prettier, Husky/lint-staged, Dependabot
@@ -181,7 +181,7 @@ The seed script currently creates these local-only officer accounts:
 | District Officer (Salem) | `district@govt.in` | `password123` |
 | Field Officer (Salem) | `field@govt.in` | `password123` |
 
-Register a beneficiary through the UI. **Change/remove these credentials before any shared or deployed demo.**
+Register a beneficiary through the UI. New passwords must be at least 12 characters and include uppercase, lowercase, and numeric characters. **Change/remove the seeded demo credentials before any shared or deployed demo.**
 
 ## Run the full stack with Docker
 
@@ -205,7 +205,7 @@ Stop the stack with `docker compose down`; retain the local database volume. To 
 
 ## API overview
 
-All routes below are under `/api`, except `/health`. Protected routes require `Authorization: Bearer <token>`.
+All API routes below are under `/api`, except `/health`. Protected routes require `Authorization: Bearer <token>`. Interactive API documentation is available at `/api/docs` when the backend is running.
 
 | Method | Endpoint | Access | Purpose |
 |---|---|---|---|
@@ -235,6 +235,7 @@ GitHub Actions is configured to run:
 - Schema migration and development seeding against a PostgreSQL 16 service container.
 - Jest/Supertest API integration tests for authentication, district isolation, date filters, approval workflow, audit history, beneficiary notifications, invalid input, role denial, and expired tokens.
 - A backend coverage report uploaded as a workflow artifact.
+- Dependency audit checks. Current audit findings must be resolved before CI can be considered green.
 
 The test suite and CI job are committed, but a green run must be confirmed on the [Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions). Do not treat a configured test as a passing test until the run finishes successfully.
 
