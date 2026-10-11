@@ -91,10 +91,10 @@ exports.getAnalytics = async (req, res) => {
         Application.findAll({ where, attributes: ['status', [fn('COUNT', col('id')), 'value']], group: ['status'], raw: true }),
         Application.findAll({ where, attributes: ['scheme', [fn('COUNT', col('id')), 'value']], group: ['scheme'], raw: true }),
         sequelize.query(
-          \`SELECT TO_CHAR(\"dateApplied\", 'YYYY-MM') AS month, COUNT(id)::int AS applications FROM \"Applications\"
-           WHERE (:startDate IS NULL OR \"dateApplied\" >= CAST(:startDate AS DATE))
-             AND (:endDate IS NULL OR \"dateApplied\" <= CAST(:endDate AS DATE)) AND district = :district
-           GROUP BY TO_CHAR(\"dateApplied\", 'YYYY-MM') ORDER BY month\`,
+          `SELECT TO_CHAR("dateApplied", 'YYYY-MM') AS month, COUNT(id)::int AS applications FROM "Applications"
+           WHERE (:startDate IS NULL OR "dateApplied" >= CAST(:startDate AS DATE))
+             AND (:endDate IS NULL OR "dateApplied" <= CAST(:endDate AS DATE)) AND district = :district
+           GROUP BY TO_CHAR("dateApplied", 'YYYY-MM') ORDER BY month`,
           { replacements: { startDate: isDate(startDate) ? startDate : null, endDate: isDate(endDate) ? endDate : null, district: user.district }, type: QueryTypes.SELECT }
         ),
       ]);
