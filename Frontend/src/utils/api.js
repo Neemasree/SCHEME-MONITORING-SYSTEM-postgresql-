@@ -15,10 +15,29 @@ api.interceptors.request.use((config) => {
             config.headers.Authorization = `Bearer ${userInfo.token}`;
         }
     } catch {
-        // Clear malformed local state rather than failing every API request.
         localStorage.removeItem('userInfo');
     }
     return config;
 });
+
+// Expired/invalid sessions are cleared centrally. Don't treat a failed login or
+// registration as an expired session, because those routes are public.
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        const status = error.response?.status;
+        const requestUrl = error.config?.url || '';
+        const isPublicAuthRequest = /\/auth\/(login|register)(?:\?|$)/.test(requestUrl);
+
+        if (status === 401 && !isPublicAuthRequest) {
+            localStorage.removeItem('userInfo');
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('auth:expired'));
+            }
+        }
+
+        return Promise.reject(error);
+    },
+);
 
 export default api;
