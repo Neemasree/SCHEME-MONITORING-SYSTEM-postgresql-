@@ -1,25 +1,83 @@
 const express = require('express');
 const router = express.Router();
 const Scheme = require('../models/Scheme');
+const { allowRoles } = require('../middleware/authMiddleware');
+
+const parsePositiveInt = (value, fallback, max = 100) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, max);
+};
 
 router.get('/', async (req, res) => {
+  const page = parsePositiveInt(req.query.page, 1, 1000000);
+  const limit = parsePositiveInt(req.query.limit, 20, 100);
+  const offset = (page - 1) * limit;
+  const where = {};
+
+  if (typeof req.query.status === 'string' && req.query.status.trim()) {
+    where.status = req.query.status.trim();
+  }
+  if (typeof req.query.district === 'string' && req.query.district.trim()) {
+    where.district = req.query.district.trim();
+  }
+
   try {
-    const schemes = await Scheme.findAll();
-    res.json(schemes);
+    const result = await Scheme.findAndCountAll({
+      where,
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
+    });
+    return res.json({
+      data: result.rows,
+      pagination: {
+        page,
+        limit,
+        total: result.count,
+        totalPages: Math.ceil(result.count / limit),
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error('Fetch schemes failed:', error);
+    return res.status(500).json({ message: 'Unable to fetch schemes' });
   }
 });
 
-// Create scheme
-router.post('/', async (req, res) => {
+router.post('/', allowRoles('admin'), async (req, res) => {
+  const {
+    schemeName,
+    description,
+    budget,
+    district,
+    startDate,
+    endDate,
+    status,
+  } = req.body || {};
+
+  if (typeof schemeName !== 'string' || schemeName.trim().length < 3 || schemeName.trim().length > 200) {
+    return res.status(400).json({ message: 'Scheme name must be between 3 and 200 characters' });
+  }
+
+  if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+    return res.status(400).json({ message: 'End date must be on or after start date' });
+  }
+
   try {
-    const { schemeName, description, budget, district, startDate, endDate, status } = req.body;
-    const scheme = await Scheme.create({ schemeName, description, budget, district, startDate, endDate, status });
-    res.status(201).json(scheme);
+    const scheme = await Scheme.create({
+      schemeName: schemeName.trim(),
+      description: typeof description === 'string' ? description.trim() : null,
+      budget: typeof budget === 'string' || typeof budget === 'number' ? String(budget) : null,
+      district: typeof district === 'string' ? district.trim() : null,
+      startDate: startDate || null,
+      endDate: endDate || null,
+      status: status || 'Active',
+    });
+
+    return res.status(201).json(scheme);
   } catch (error) {
-    console.error('Scheme create error:', error.message, error.errors?.map(e => e.message));
-    res.status(400).json({ error: error.message, details: error.errors?.map(e => ({ field: e.path, msg: e.message })) });
+    console.error('Create scheme failed:', error);
+    return res.status(400).json({ message: 'Unable to create scheme; check the supplied fields' });
   }
 });
 
