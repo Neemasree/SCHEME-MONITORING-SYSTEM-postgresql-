@@ -3,11 +3,13 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
+const swaggerUi = require('swagger-ui-express');
 const crypto = require('node:crypto');
 const { env } = require('./config/env');
 const { sequelize, connectDB } = require('./config/db');
 const { authenticate, allowRoles } = require('./middleware/authMiddleware');
 const { writeLimiter } = require('./middleware/rateLimiters');
+const openapiSpec = require('./docs/openapi');
 
 // Routes
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -58,6 +60,12 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '1mb' }));
 app.use(writeLimiter);
+
+app.use('/api/docs', (req, res, next) => {
+  // Swagger UI uses inline bootstrap scripts; relax CSP only for this static docs page.
+  res.removeHeader('Content-Security-Policy');
+  next();
+}, swaggerUi.serve, swaggerUi.setup(openapiSpec));
 
 app.get('/health', async (req, res) => {
   try {
