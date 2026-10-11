@@ -8,15 +8,18 @@ import './Districts.css';
 const Districts = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [performance, setPerformance] = useState([]);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         const fetchDistricts = async () => {
             setIsLoading(true);
+            setError('');
             try {
                 const { data } = await api.get('/dashboard/analytics');
                 setPerformance(data.districtStats || []);
-            } catch (error) {
-                console.error("Error fetching district data:", error);
+            } catch (requestError) {
+                console.error("Error fetching district data:", requestError);
+                setError(requestError.response?.data?.message || 'Unable to load district performance.');
             } finally {
                 setIsLoading(false);
             }
@@ -40,6 +43,12 @@ const Districts = () => {
                 <h1 className="page-title">District Monitoring Hub</h1>
                 <p className="page-subtitle">Analyze performance and application throughput across regions</p>
             </div>
+
+            {error && <div className="error-banner" role="alert">{error}</div>}
+
+            {!isLoading && !error && performance.length === 0 && (
+                <div className="glass-card table-empty-state" role="status">No district performance data is available yet.</div>
+            )}
 
             <div className="districts-grid animate-fade-in" style={{ animationDelay: '0.1s' }}>
                 {performance.map((dist) => (
@@ -83,14 +92,14 @@ const Districts = () => {
             <div className="districts-chart-container animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 {isLoading ? (
                     <SkeletonChart />
-                ) : (
+                ) : performance.length > 0 ? (
                     <BarGraph
                         data={performance}
                         title="District Comparative Performance"
                         dataKey="total"
                         xAxisKey="district"
                     />
-                )}
+                ) : <p className="empty-state" role="status">No district chart data is available yet.</p>}
             </div>
         </div>
     );
