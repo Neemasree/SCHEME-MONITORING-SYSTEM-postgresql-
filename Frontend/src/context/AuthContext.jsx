@@ -24,6 +24,14 @@ export const AuthProvider = ({ children }) => {
         }
     }, []);
 
+    useEffect(() => {
+        const handleExpiredSession = () => {
+            setUser(null);
+        };
+        window.addEventListener('auth:expired', handleExpiredSession);
+        return () => window.removeEventListener('auth:expired', handleExpiredSession);
+    }, []);
+
     const login = (userData) => {
         setUser(userData);
         localStorage.setItem('userInfo', JSON.stringify(userData));
