@@ -83,9 +83,9 @@ exports.getAnalytics = async (req, res) => {
         Application.findAll({
           where,
           attributes: ['district', [fn('COUNT', col('id')), 'total'],
-            [fn('SUM', literal(\`CASE WHEN status = 'Approved' THEN 1 ELSE 0 END\`)), 'approved'],
-            [fn('SUM', literal(\`CASE WHEN status IN ('Pending Field Officer', 'Pending District Officer', 'Pending Admin') THEN 1 ELSE 0 END\`)), 'pending'],
-            [fn('SUM', literal(\`CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END\`)), 'rejected']],
+            [fn('SUM', literal(`CASE WHEN status = 'Approved' THEN 1 ELSE 0 END`)), 'approved'],
+            [fn('SUM', literal(`CASE WHEN status IN ('Pending Field Officer', 'Pending District Officer', 'Pending Admin') THEN 1 ELSE 0 END`)), 'pending'],
+            [fn('SUM', literal(`CASE WHEN status = 'Rejected' THEN 1 ELSE 0 END`)), 'rejected']],
           group: ['district'], raw: true,
         }),
         Application.findAll({ where, attributes: ['status', [fn('COUNT', col('id')), 'value']], group: ['status'], raw: true }),
