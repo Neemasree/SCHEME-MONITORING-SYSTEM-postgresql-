@@ -11,13 +11,17 @@ const createDatabase = async () => {
   });
 
   try {
+    const databaseName = process.env.DB_NAME;
+    if (!databaseName || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(databaseName)) {
+      throw new Error('DB_NAME must be a valid PostgreSQL identifier (letters, digits, underscores; not starting with a digit).');
+    }
     await client.connect();
     console.log('Connected to PostgreSQL.');
 
-    const res = await client.query(`SELECT 1 FROM pg_database WHERE datname='${process.env.DB_NAME}'`);
+    const res = await client.query('SELECT 1 FROM pg_database WHERE datname = $1', [databaseName]);
     if (res.rowCount === 0) {
       console.log(`Database "${process.env.DB_NAME}" not found. Creating...`);
-      await client.query(`CREATE DATABASE ${process.env.DB_NAME}`);
+      await client.query(`CREATE DATABASE "${databaseName}"`);
       console.log(`Database "${process.env.DB_NAME}" created successfully!`);
     } else {
       console.log(`Database "${process.env.DB_NAME}" already exists.`);
