@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { connectDB } = require('./config/db');
+const { authenticate } = require('./middleware/authMiddleware');
 
 // Routes
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -25,14 +26,15 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
-// Authentication routes remain public. Protected route groups must apply
-// authentication and role authorization middleware before production exposure.
 app.use('/api/auth', authRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/schemes', schemeRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/performance', performanceRoutes);
-app.use('/api/notifications', notificationRoutes);
+
+// Existing protected API groups now require a valid user token.
+// Add per-route allowRoles(...) checks for mutations before production use.
+app.use('/api/dashboard', authenticate, dashboardRoutes);
+app.use('/api/schemes', authenticate, schemeRoutes);
+app.use('/api/applications', authenticate, applicationRoutes);
+app.use('/api/performance', authenticate, performanceRoutes);
+app.use('/api/notifications', authenticate, notificationRoutes);
 
 app.get('/', (_req, res) => {
   res.send('Government Monitoring System API is running.');
