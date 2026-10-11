@@ -43,14 +43,14 @@ const connectDB = async () => {
       description = await queryInterface.describeTable(table);
     } catch {
       throw new Error(
-        `Database schema is missing required table "${table}". Apply the current schema before starting the API.`,
+        `Database schema is missing required table "${table}". Run `npm run migrate` in the backend directory before starting the API.`,
       );
     }
 
     const missingColumns = columns.filter((column) => !description[column]);
     if (missingColumns.length > 0) {
       throw new Error(
-        `Database table "${table}" is missing columns: ${missingColumns.join(', ')}. Apply the current schema before starting the API.`,
+        `Database table "${table}" is missing columns: ${missingColumns.join(', ')}. Run `npm run migrate` in the backend directory before starting the API.`,
       );
     }
   }
