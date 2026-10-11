@@ -22,9 +22,9 @@ const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history
 
     // Determine if action buttons should be shown based on role and current status
     const canAct = () => {
-        if (role === 'admin' && data.status.includes('Approved')) return false; // Admin final approval, simplified
-        if (role === 'field' && !data.status.includes('Field Officer')) return false;
-        if (role === 'district' && !data.status.includes('District Officer')) return false;
+        if (role === 'admin' && data.status !== 'Pending Admin') return false;
+        if (role === 'field' && data.status !== 'Pending Field Officer') return false;
+        if (role === 'district' && data.status !== 'Pending District Officer') return false;
         if (data.status === 'Approved' || data.status === 'Rejected') return false;
         return true;
     };
