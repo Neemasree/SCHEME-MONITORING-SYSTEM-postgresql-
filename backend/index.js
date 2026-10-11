@@ -25,6 +25,29 @@ morgan.token('request-id', (req) => req.id);
 app.use((req, res, next) => {
   req.id = req.get('x-request-id')?.slice(0, 100) || crypto.randomUUID();
   res.setHeader('X-Request-ID', req.id);
+
+  // Normalize errors from legacy route-level handlers as well as thrown errors.
+  const originalJson = res.json.bind(res);
+  res.json = (body) => {
+    if (res.statusCode >= 400 && body && typeof body === 'object' && !Array.isArray(body)) {
+      const codeByStatus = {
+        400: 'BAD_REQUEST',
+        401: 'UNAUTHORIZED',
+        403: 'FORBIDDEN',
+        404: 'NOT_FOUND',
+        409: 'CONFLICT',
+        422: 'VALIDATION_ERROR',
+        429: 'RATE_LIMITED',
+      };
+      return originalJson({
+        ...body,
+        message: body.message || 'The request could not be completed',
+        code: body.code || codeByStatus[res.statusCode] || 'REQUEST_ERROR',
+        requestId: body.requestId || req.id,
+      });
+    }
+    return originalJson(body);
+  };
   next();
 });
 app.use(morgan(':request-id :method :url :status :response-time ms'));
