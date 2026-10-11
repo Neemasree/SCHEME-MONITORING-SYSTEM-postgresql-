@@ -11,22 +11,27 @@ const Applications = ({ role, searchTerm = '' }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [statusFilter, setStatusFilter] = useState('all');
     const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
 
     const fetchApplications = async () => {
         setIsLoading(true);
+        setError('');
         try {
-            const { data } = await api.get('/applications');
-            const mappedData = data.map(app => ({
+            const response = await api.get('/applications');
+            const rows = Array.isArray(response.data) ? response.data : response.data.data || [];
+            setData(rows.map((app) => ({
                 ...app,
-                _id: String(app.id), // For any action references
+                _id: String(app.id),
                 id: String(app.id).padStart(6, '0').toUpperCase(),
-                beneficiary: app.beneficiary,
-                scheme: app.scheme,
-                dateApplied: new Date(app.dateApplied).toLocaleDateString()
-            }));
-            setData(mappedData);
-        } catch (error) {
-            console.error("Error fetching applications:", error);
+                beneficiary: app.beneficiaryName || app.beneficiary || '—',
+                scheme: app.schemeId?.schemeName || app.scheme || '—',
+                district: app.district || '—',
+                dateApplied: app.appliedDate || app.dateApplied
+                    ? new Date(app.appliedDate || app.dateApplied).toLocaleDateString()
+                    : '—',
+            })));
+        } catch (requestError) {
+            setError(requestError.response?.data?.message || 'Unable to load applications.');
         } finally {
             setIsLoading(false);
         }
@@ -46,94 +51,69 @@ const Applications = ({ role, searchTerm = '' }) => {
         { header: 'Action', key: 'action', align: 'center' },
     ];
 
-    const getFilteredData = () => {
-        let filtered = data;
+    const term = searchTerm.trim().toLowerCase();
+    const filteredData = data.filter((app) => {
+        const roleVisible =
+            role === 'admin' ||
+            role === 'district' ||
+            role === 'district_officer' ||
+            (role === 'field' || role === 'field_officer')
+                ? true
+                : false;
 
-        // Role Base Filtering (Frontend view safety)
-        if (role === 'district' || role === 'district_officer') {
-            filtered = filtered.filter(app =>
-                app.status.includes('District Officer') ||
-                app.status === 'Pending Admin' ||
-                app.status === 'Approved' ||
-                app.status === 'Rejected'
-            );
-        } else if (role === 'field' || role === 'field_officer') {
-            filtered = filtered.filter(app => app.status.includes('Field Officer'));
-        }
+        if (!roleVisible) return false;
 
-        // Dropdown Status Filter
-        if (statusFilter !== 'all') {
-            filtered = filtered.filter(app => {
-                const s = app.status.toLowerCase();
-                if (statusFilter === 'pending') return s.includes('pending');
-                if (statusFilter === 'approved') return s === 'approved';
-                if (statusFilter === 'rejected') return s === 'rejected';
-                return true;
-            });
-        }
+        const status = String(app.status || '').toLowerCase();
+        const matchesStatus =
+            statusFilter === 'all' ||
+            (statusFilter === 'pending' && status.includes('pending')) ||
+            (statusFilter === 'approved' && status === 'approved') ||
+            (statusFilter === 'rejected' && status === 'rejected');
 
-        // Global Search Filter
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
-            filtered = filtered.filter(app =>
-                app.beneficiary.toLowerCase().includes(term) ||
-                app.scheme.toLowerCase().includes(term) ||
-                app.id.includes(term) ||
-                app.district.toLowerCase().includes(term)
-            );
-        }
+        const matchesSearch =
+            !term ||
+            String(app.beneficiary).toLowerCase().includes(term) ||
+            String(app.scheme).toLowerCase().includes(term) ||
+            String(app.id).toLowerCase().includes(term) ||
+            String(app.district).toLowerCase().includes(term);
 
-        return filtered;
-    };
+        return matchesStatus && matchesSearch;
+    });
 
     const handleActionClick = (app) => {
         setSelectedApp(app);
         setIsModalOpen(true);
     };
 
-    const handleApprove = async (app, remark) => {
+    const submitDecision = async (app, action, remark) => {
         try {
-            await api.put(`/applications/${app._id}/approve`, {
-                action: 'approve',
-                remark,
-                role // Passed from user context via props
-            });
-            fetchApplications(); // Refresh list
+            await api.put(`/applications/${app._id}/approve`, { action, remark });
+            await fetchApplications();
             setIsModalOpen(false);
-        } catch (error) {
-            alert(error.response?.data?.message || "Failed to approve application");
+            setSelectedApp(null);
+        } catch (requestError) {
+            window.alert(requestError.response?.data?.message || `Failed to ${action} application.`);
         }
     };
 
-    const handleReject = async (app, remark) => {
-        try {
-            await api.put(`/applications/${app._id}/approve`, {
-                action: 'reject',
-                remark,
-                role // Passed from user context via props
-            });
-            fetchApplications(); // Refresh list
-            setIsModalOpen(false);
-        } catch (error) {
-            alert(error.response?.data?.message || "Failed to reject application");
-        }
-    };
+    const handleApprove = (app, remark) => submitDecision(app, 'approve', remark);
+    const handleReject = (app, remark) => submitDecision(app, 'reject', remark);
 
     return (
         <div className="applications-page">
             <div className="page-header animate-fade-in flex-between">
                 <div>
                     <h1 className="page-title">Application Processing</h1>
-                    <p className="page-subtitle">Track, verify, and approve beneficiary applications</p>
+                    <p className="page-subtitle">Track and review beneficiary applications</p>
                 </div>
-
                 <div className="status-filters">
                     <select
                         className="filter-select"
                         value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
+                        onChange={(event) => setStatusFilter(event.target.value)}
+                        aria-label="Filter applications by status"
                     >
-                        <option value="all">All Statuses</option>
+                        <option value="all">All statuses</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
@@ -141,27 +121,29 @@ const Applications = ({ role, searchTerm = '' }) => {
                 </div>
             </div>
 
-            <div className="applications-content slideUp" style={{ animationDelay: '0.1s' }}>
-                {isLoading ? (
-                    <SkeletonTable rows={10} />
-                ) : (
-                    <StatusTable
-                        columns={columns}
-                        data={getFilteredData()}
-                        onActionClick={handleActionClick}
-                        itemsPerPage={10}
-                    />
-                )}
-            </div>
+            {error && <div className="error-banner" role="alert">{error}</div>}
 
-            <ActionModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                data={selectedApp}
-                role={role}
-                onApprove={handleApprove}
-                onReject={handleReject}
-            />
+            {isLoading ? <SkeletonTable rows={8} /> : (
+                <StatusTable
+                    columns={columns}
+                    data={filteredData}
+                    onActionClick={handleActionClick}
+                    itemsPerPage={8}
+                />
+            )}
+
+            {selectedApp && (
+                <ActionModal
+                    isOpen={isModalOpen}
+                    application={selectedApp}
+                    onClose={() => {
+                        setIsModalOpen(false);
+                        setSelectedApp(null);
+                    }}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                />
+            )}
         </div>
     );
 };
