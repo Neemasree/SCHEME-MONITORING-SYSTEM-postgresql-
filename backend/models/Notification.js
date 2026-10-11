@@ -24,8 +24,14 @@ const Notification = sequelize.define('Notification', {
     defaultValue: false,
   },
   role: {
-    type: DataTypes.STRING, // To filter notifications by role
+    type: DataTypes.STRING,
     allowNull: true,
+  },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'Users', key: 'id' },
+    onDelete: 'CASCADE',
   }
 }, {
   timestamps: true,
