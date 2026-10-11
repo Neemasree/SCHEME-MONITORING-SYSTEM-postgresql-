@@ -203,6 +203,16 @@ The default Compose credentials are for local development only. Set `DB_PASSWORD
 
 Stop the stack with `docker compose down`; retain the local database volume. To remove the database volume too, use `docker compose down -v` (this permanently deletes local database data).
 
+## Hosted deployment setup (not yet live)
+
+The repository now includes a Render blueprint (`render.yaml`) and Vercel SPA routing configuration (`Frontend/vercel.json`). These are deployment templates, not proof of a live deployment.
+
+1. **Neon:** create a PostgreSQL database and copy its database name, username, password, and host.
+2. **Render:** create a Blueprint deployment from this repository. Set `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `DB_HOST` from Neon. Keep `DB_PORT=5432`; production mode requires verified PostgreSQL SSL. Set `CLIENT_ORIGIN` to the exact deployed Vercel origin.
+3. **Vercel:** import the repository and set the project root to `Frontend`. Add `VITE_API_URL=https://YOUR-RENDER-SERVICE.onrender.com/api`, replacing the example host with the actual Render service URL. Build command: `npm run build`; output directory: `dist`.
+4. After both services deploy, open Render's `/health` endpoint, sign in using a newly created demo account, and test beneficiary submission through the full officer workflow.
+5. Only then add the actual Vercel URL, API URL, and rotated demo logins to this README. Do not publish default seed credentials or any secret values.
+
 ## API overview
 
 All API routes below are under `/api`, except `/health`. Protected routes require `Authorization: Bearer <token>`. Interactive API documentation is available at `/api/docs` when the backend is running.
@@ -242,7 +252,7 @@ The test suite and CI job are committed, but a green run must be confirmed on th
 ## Evidence and deployment status
 
 - **Screenshots/GIF:** to be added after each role is run against a seeded database.
-- **Live deployment:** not yet verified. Vercel + Render + Neon require connected hosting accounts, production environment variables, and a successful deployment; this README does not claim a live URL.
+- **Live deployment:** not yet verified. Deployment templates are committed for Vercel and Render; Neon credentials, connected hosting accounts, production environment variables, and a successful live smoke test are still required. This README does not claim a live URL.
 - **Repository topics/description:** should be set in GitHub repository settings.
 
 ## Security note
