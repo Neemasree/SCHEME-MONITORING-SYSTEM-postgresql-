@@ -3,7 +3,6 @@ const { sequelize } = require('../config/db');
 require('../models');
 const Scheme = require('../models/Scheme');
 const Application = require('../models/Application');
-const DistrictPerformance = require('../models/Performance');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 
@@ -102,36 +101,6 @@ const applicationsData = [
   },
 ];
 
-const performanceData = [
-  {
-    id: 1,
-    district: "Salem",
-    totalApplications: 500,
-    approved: 300,
-    pending: 150,
-    rejected: 50,
-    rating: "A",
-  },
-  {
-    id: 2,
-    district: "Coimbatore",
-    totalApplications: 800,
-    approved: 600,
-    pending: 100,
-    rejected: 100,
-    rating: "A+",
-  },
-  {
-    id: 3,
-    district: "Madurai",
-    totalApplications: 400,
-    approved: 200,
-    pending: 150,
-    rejected: 50,
-    rating: "B",
-  },
-];
-
 const notificationsData = [
   {
     title: "New Application",
@@ -171,14 +140,11 @@ const seedDatabase = async () => {
     await Application.bulkCreate(applicationsData);
     console.log('Applications data seeded.');
 
-    await DistrictPerformance.bulkCreate(performanceData);
-    console.log('Performance data seeded.');
-
     await Notification.bulkCreate(notificationsData);
     console.log('Notification data seeded.');
 
     // Fix PostgreSQL auto-increment sequences since we're providing hardcoded IDs
-    const tables = ['Users', 'Schemes', 'Applications', 'Performances', 'Notifications'];
+    const tables = ['Users', 'Schemes', 'Applications', 'Notifications'];
     for (const table of tables) {
       try {
         await sequelize.query(`SELECT setval('"${table}_id_seq"', (SELECT MAX(id) FROM "${table}"))`);
