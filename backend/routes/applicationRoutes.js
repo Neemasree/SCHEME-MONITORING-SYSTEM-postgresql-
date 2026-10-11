@@ -7,6 +7,12 @@ const Scheme = require('../models/Scheme');
 const Notification = require('../models/Notification');
 const { allowRoles } = require('../middleware/authMiddleware');
 
+const parsePositiveInt = (value, fallback, max = 100) => {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isInteger(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, max);
+};
+
 const notifyWorkflowRecipients = async (application, status, transaction) => {
   let recipients = [];
   let title = 'Application update';
@@ -68,9 +74,16 @@ router.get('/', async (req, res) => {
       scope.district = user.district;
     }
 
-    const applications = await Application.findAll({ where: scope });
+    const page = parsePositiveInt(req.query.page, 1, 1000000);
+    const limit = parsePositiveInt(req.query.limit, 20, 100);
+    const result = await Application.findAndCountAll({
+      where: scope,
+      limit,
+      offset: (page - 1) * limit,
+      order: [['dateApplied', 'DESC'], ['id', 'DESC']],
+    });
 
-    const formatted = applications.map((app) => ({
+    const formatted = result.rows.map((app) => ({
       ...app.get({ plain: true }),
       _id: String(app.id).padStart(12, '0'),
       beneficiaryName: app.beneficiary,
@@ -80,7 +93,15 @@ router.get('/', async (req, res) => {
       },
     }));
 
-    return res.json(formatted);
+    return res.json({
+      data: formatted,
+      pagination: {
+        page,
+        limit,
+        total: result.count,
+        totalPages: Math.ceil(result.count / limit),
+      },
+    });
   } catch (error) {
     console.error('Fetch applications failed:', error);
     return res.status(500).json({ message: 'Unable to fetch applications' });
