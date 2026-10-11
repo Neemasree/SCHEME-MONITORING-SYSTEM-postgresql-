@@ -4,7 +4,56 @@ const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
 const Scheme = require('../models/Scheme');
+const Notification = require('../models/Notification');
 const { allowRoles } = require('../middleware/authMiddleware');
+
+const notifyWorkflowRecipients = async (application, status, transaction) => {
+  let recipients = [];
+  let title = 'Application update';
+  let message = `Application #${application.id} is now ${status}.`;
+  let type = 'info';
+
+  if (status === 'Pending Field Officer') {
+    recipients = await User.findAll({
+      where: { role: 'field_officer', district: application.district, isActive: true },
+      attributes: ['id', 'role'],
+      transaction,
+    });
+    title = 'New application to verify';
+  } else if (status === 'Pending District Officer') {
+    recipients = await User.findAll({
+      where: { role: 'district_officer', district: application.district, isActive: true },
+      attributes: ['id', 'role'],
+      transaction,
+    });
+    title = 'Application forwarded for district review';
+  } else if (status === 'Pending Admin') {
+    recipients = await User.findAll({
+      where: { role: 'admin', isActive: true },
+      attributes: ['id', 'role'],
+      transaction,
+    });
+    title = 'Application awaiting final approval';
+  } else if (['Approved', 'Rejected'].includes(status) && application.beneficiaryUserId) {
+    const beneficiary = await User.findByPk(application.beneficiaryUserId, {
+      attributes: ['id', 'role'],
+      transaction,
+    });
+    if (beneficiary?.isActive) recipients = [beneficiary];
+    title = status === 'Approved' ? 'Application approved' : 'Application rejected';
+    type = status === 'Approved' ? 'success' : 'error';
+  }
+
+  if (recipients.length === 0) return;
+  await Notification.bulkCreate(recipients.map((recipient) => ({
+    userId: recipient.id,
+    role: recipient.role,
+    title,
+    message,
+    type,
+    isRead: false,
+  })), { transaction });
+};
 
 router.get('/', async (req, res) => {
   try {
@@ -73,6 +122,7 @@ router.post('/', allowRoles('beneficiary'), async (req, res) => {
       newStatus: application.status,
       remark: null,
     });
+    await notifyWorkflowRecipients(application, application.status);
 
     return res.status(201).json({ message: 'Application submitted successfully', application });
   } catch (error) {
@@ -212,6 +262,7 @@ router.put(
         newStatus: status,
         remark: normalizedRemark || null,
       }, { transaction });
+      await notifyWorkflowRecipients(application, status, transaction);
 
       await transaction.commit();
       return res.json({ message: `Application ${status.toLowerCase()} successfully`, application });
