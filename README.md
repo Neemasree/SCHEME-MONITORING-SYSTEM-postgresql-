@@ -207,11 +207,13 @@ All routes below are under `/api`, except `/health`. Protected routes require `A
 
 ## CI and verification
 
-GitHub Actions currently runs:
+GitHub Actions is configured to run:
 - ESLint and Vite production build for the frontend.
-- JavaScript syntax checks for backend files.
+- Backend JavaScript syntax checks.
+- Schema migration and development seed against a PostgreSQL 16 service container.
+- Jest/Supertest API integration tests for authentication, district isolation, date filters, the full approval workflow, audit history, and beneficiary notifications.
 
-The project still needs PostgreSQL-backed integration tests for login, role access, district isolation, and every workflow transition. A green syntax/build workflow alone does not prove database workflows work end-to-end.
+Check the [Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for the latest run result. The changes have been committed, but I have not verified a completed green run from this session.
 
 ## Evidence and deployment status
 
