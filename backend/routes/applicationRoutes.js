@@ -8,7 +8,7 @@ const { allowRoles } = require('../middleware/authMiddleware');
 router.get('/', async (req, res) => {
   try {
     const scope = {};
-    if (req.user.role === 'district_officer') {
+    if (['district_officer', 'field_officer'].includes(req.user.role)) {
       const user = await User.findByPk(req.user.id, { attributes: ['district'] });
       if (!user?.district) {
         return res.status(403).json({ message: 'No district is assigned to this account' });
