@@ -5,17 +5,21 @@ import api from '../../utils/api';
 import './Reports.css';
 
 const Reports = () => {
-    const [, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
     const [analytics, setAnalytics] = useState({ schemeData: [], statusData: [], districtStats: [], trendData: [] });
 
     useEffect(() => {
         const fetchReports = async () => {
             setIsLoading(true);
+            setError('');
             try {
                 const { data } = await api.get('/dashboard/analytics');
                 setAnalytics(data);
-            } catch (error) {
-                console.error("Error fetching report analytics:", error);
+            } catch (requestError) {
+                console.error("Error fetching report analytics:", requestError);
+                setError(requestError.response?.data?.message || 'Unable to load report analytics.');
             } finally {
                 setIsLoading(false);
             }
@@ -25,7 +29,7 @@ const Reports = () => {
     }, []);
 
     const handleDownload = (title, format) => {
-        alert(`Requesting ${title} in ${format} format from the server...`);
+        setNotice(`${title} (${format}) export is not configured yet. No file has been generated.`);
     };
 
     const reportTypes = [
@@ -46,9 +50,12 @@ const Reports = () => {
 
                 <div className="date-filter glass-card">
                     <Filter size={16} />
-                    <span>Last 6 Months</span>
+                    <span>All Available Months</span>
                 </div>
             </div>
+
+            {error && <div className="error-banner" role="alert">{error}</div>}
+            {notice && <div className="notice-banner" role="status">{notice}</div>}
 
             <div className="reports-content slideUp" style={{ animationDelay: '0.1s' }}>
 
@@ -82,7 +89,9 @@ const Reports = () => {
 
                     <div className="chart-row">
                         <div className="chart-box">
-                            <PieGraph data={analytics.schemeData} title="Application Scheme Targets" />
+                            {isLoading ? <p role="status">Loading report analytics…</p> : analytics.schemeData.length > 0
+                                ? <PieGraph data={analytics.schemeData} title="Application Scheme Targets" />
+                                : <p className="empty-state" role="status">No scheme analytics are available yet.</p>}
                         </div>
                         <div className="analytics-stats">
                             <div className="stat-row">
