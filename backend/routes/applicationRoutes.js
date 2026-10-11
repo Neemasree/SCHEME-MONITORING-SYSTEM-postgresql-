@@ -3,12 +3,15 @@ const router = express.Router();
 const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
 const User = require('../models/User');
+const Scheme = require('../models/Scheme');
 const { allowRoles } = require('../middleware/authMiddleware');
 
 router.get('/', async (req, res) => {
   try {
     const scope = {};
-    if (['district_officer', 'field_officer'].includes(req.user.role)) {
+    if (req.user.role === 'beneficiary') {
+      scope.beneficiaryUserId = req.user.id;
+    } else if (['district_officer', 'field_officer'].includes(req.user.role)) {
       const user = await User.findByPk(req.user.id, { attributes: ['district'] });
       if (!user?.district) {
         return res.status(403).json({ message: 'No district is assigned to this account' });
@@ -32,6 +35,49 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Fetch applications failed:', error);
     return res.status(500).json({ message: 'Unable to fetch applications' });
+  }
+});
+
+router.post('/', allowRoles('beneficiary'), async (req, res) => {
+  const schemeId = Number.parseInt(req.body?.schemeId, 10);
+  if (!Number.isInteger(schemeId) || schemeId <= 0) {
+    return res.status(400).json({ message: 'A valid scheme is required' });
+  }
+
+  try {
+    const scheme = await Scheme.findByPk(schemeId);
+    if (!scheme || scheme.status !== 'Active') {
+      return res.status(404).json({ message: 'Active scheme not found' });
+    }
+    if (!scheme.district?.trim()) {
+      return res.status(400).json({ message: 'This scheme does not have a district configured' });
+    }
+
+    const application = await Application.create({
+      beneficiaryUserId: req.user.id,
+      beneficiary: req.user.name,
+      scheme: scheme.schemeName,
+      district: scheme.district,
+      status: 'Pending Field Officer',
+      dateApplied: new Date().toISOString().slice(0, 10),
+      remarks: [],
+    });
+
+    await AuditLog.create({
+      entityType: 'application',
+      entityId: application.id,
+      action: 'application_submitted',
+      actorId: req.user.id,
+      actorRole: req.user.role,
+      previousStatus: null,
+      newStatus: application.status,
+      remark: null,
+    });
+
+    return res.status(201).json({ message: 'Application submitted successfully', application });
+  } catch (error) {
+    console.error('Create application failed:', error);
+    return res.status(500).json({ message: 'Unable to submit application' });
   }
 });
 
