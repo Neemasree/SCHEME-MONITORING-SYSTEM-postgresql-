@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../../utils/api';
-import { User, Mail, Lock, Shield, Map, CheckSquare, Loader2, ArrowLeft } from 'lucide-react';
+import { User, Mail, Lock, ArrowLeft } from 'lucide-react';
 import './Register.css';
 
 const Register = () => {
@@ -9,47 +9,25 @@ const Register = () => {
         name: '',
         email: '',
         password: '',
-        role: '',
-        district: ''
     });
     const [error, setError] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const navigate = useNavigate();
 
-    const districts = ['Salem', 'Coimbatore', 'Chennai', 'Madurai', 'Trichy', 'Tirunelveli', 'Erode', 'Vellore', 'Thanjavur', 'Theni'];
-
-    const roles = [
-        { id: 'district_officer', title: 'District Officer', icon: <Map size={24} />, desc: 'Monitor district performance' },
-        { id: 'field_officer', title: 'Field Officer', icon: <CheckSquare size={24} />, desc: 'Handle on-ground verification' },
-    ];
-
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleRoleSelect = (roleId) => {
-        setFormData({ ...formData, role: roleId });
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
-        if (!formData.role) {
-            setError('Please select a role.');
-            return;
-        }
-
-        if (formData.role !== 'admin' && !formData.district) {
-            setError('Please select a district.');
-            return;
-        }
-
         setIsSubmitting(true);
+
         try {
             await api.post('/auth/register', formData);
-            // Registration successful, redirect to login
-            navigate('/login', { state: { message: 'Registration successful! Please login with your new credentials.' } });
+            navigate('/login', {
+                state: { message: 'Account created. Please sign in with your new credentials.' },
+            });
         } catch (err) {
             setError(err.response?.data?.message || 'Registration failed. Please try again.');
         } finally {
@@ -66,99 +44,70 @@ const Register = () => {
 
                 <div className="register-header">
                     <div className="register-logo">🏛️</div>
-                    <h2>Create Officer Account</h2>
-                    <p>Join the Scheme Monitoring System</p>
+                    <h2>Create Beneficiary Account</h2>
+                    <p>Register to access scheme application services</p>
                 </div>
 
-                {error && <div className="register-error-alert slideUp">{error}</div>}
+                {error && <div className="register-error-alert slideUp" role="alert">{error}</div>}
 
                 <form onSubmit={handleSubmit} className="register-form">
                     <div className="form-grid">
                         <div className="form-group">
-                            <label><User size={16} /> Full Name</label>
+                            <label htmlFor="name"><User size={16} /> Full Name</label>
                             <input
+                                id="name"
                                 type="text"
                                 name="name"
-                                placeholder="John Doe"
+                                placeholder="Your full name"
                                 value={formData.name}
                                 onChange={handleChange}
+                                minLength={2}
+                                maxLength={100}
+                                autoComplete="name"
                                 required
                             />
                         </div>
 
                         <div className="form-group">
-                            <label><Mail size={16} /> Email Address</label>
+                            <label htmlFor="email"><Mail size={16} /> Email Address</label>
                             <input
+                                id="email"
                                 type="email"
                                 name="email"
-                                placeholder="officer@govt.in"
+                                placeholder="you@example.com"
                                 value={formData.email}
                                 onChange={handleChange}
+                                autoComplete="email"
+                                maxLength={254}
                                 required
                             />
                         </div>
 
                         <div className="form-group">
-                            <label><Lock size={16} /> Password</label>
+                            <label htmlFor="password"><Lock size={16} /> Password</label>
                             <input
+                                id="password"
                                 type="password"
                                 name="password"
-                                placeholder="••••••••"
+                                placeholder="At least 8 characters"
                                 value={formData.password}
                                 onChange={handleChange}
+                                autoComplete="new-password"
+                                minLength={8}
+                                maxLength={128}
                                 required
-                                minLength="6"
                             />
                         </div>
-
-                        <div className="form-group">
-                            <label><Map size={16} /> District</label>
-                            <select
-                                name="district"
-                                value={formData.district}
-                                onChange={handleChange}
-                                required
-                            >
-                                <option value="">Select District</option>
-                                {districts.map(d => (
-                                    <option key={d} value={d}>{d}</option>
-                                ))}
-                            </select>
-                        </div>
                     </div>
 
-                    <div className="role-selection-compact">
-                        <p className="selection-label">Select Your Role</p>
-                        <div className="role-row">
-                            {roles.map((role) => (
-                                <div
-                                    key={role.id}
-                                    className={`role-option ${formData.role === role.id ? 'active' : ''}`}
-                                    onClick={() => handleRoleSelect(role.id)}
-                                >
-                                    <div className="role-option-icon">{role.icon}</div>
-                                    <div className="role-option-text">
-                                        <h4>{role.title}</h4>
-                                        <p>{role.desc}</p>
-                                    </div>
-                                    {formData.role === role.id && <div className="active-dot"></div>}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <button
-                        type="submit"
-                        className="register-btn"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? <Loader2 className="animate-spin" size={20} /> : 'Register Account'}
+                    <button type="submit" className="register-btn" disabled={isSubmitting}>
+                        {isSubmitting ? 'Creating Account...' : 'Create Account'}
                     </button>
                 </form>
 
-                <div className="register-footer">
-                    <p>Already have an account? <Link to="/login">Login here</Link></p>
-                </div>
+                <p className="register-footer">
+                    Officer accounts are provisioned by an administrator.
+                </p>
             </div>
         </div>
     );
