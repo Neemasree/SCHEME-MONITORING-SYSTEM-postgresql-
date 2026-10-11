@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
-import { Shield, Map, CheckSquare, Loader2 } from 'lucide-react';
+import { Shield, Map, CheckSquare, Loader2, UserRound } from 'lucide-react';
 import './Login.css';
 
 const Login = () => {
@@ -26,6 +26,7 @@ const Login = () => {
         { id: 'admin', title: 'System Admin', icon: <Shield size={32} />, desc: 'Full system access & final approvals' },
         { id: 'district_officer', title: 'District Officer', icon: <Map size={32} />, desc: 'Review & forward applications' },
         { id: 'field_officer', title: 'Field Officer', icon: <CheckSquare size={32} />, desc: 'Verify on-ground applications' },
+        { id: 'beneficiary', title: 'Beneficiary', icon: <UserRound size={32} />, desc: 'Apply for schemes and track decisions' },
     ];
 
     const handleLogin = async (e) => {
@@ -74,17 +75,19 @@ const Login = () => {
                         <p className="selection-label">Select Your Role</p>
                         <div className="role-grid">
                             {roles.map((role, idx) => (
-                                <div
+                                <button
+                                    type="button"
                                     key={role.id}
                                     className={`role-card ${selectedRole === role.id ? 'selected' : ''}`}
                                     onClick={() => setSelectedRole(role.id)}
+                                    aria-pressed={selectedRole === role.id}
                                     style={{ animationDelay: `${idx * 0.1}s` }}
                                 >
                                     <div className="role-icon">{role.icon}</div>
                                     <h3>{role.title}</h3>
                                     <p>{role.desc}</p>
                                     {selectedRole === role.id && <div className="selected-indicator"></div>}
-                                </div>
+                                </button>
                             ))}
                         </div>
                     </div>
