@@ -36,7 +36,7 @@ const notifyWorkflowRecipients = async (application, status, transaction) => {
     title = 'Application awaiting final approval';
   } else if (['Approved', 'Rejected'].includes(status) && application.beneficiaryUserId) {
     const beneficiary = await User.findByPk(application.beneficiaryUserId, {
-      attributes: ['id', 'role'],
+      attributes: ['id', 'role', 'isActive'],
       transaction,
     });
     if (beneficiary?.isActive) recipients = [beneficiary];
