@@ -23,7 +23,7 @@ CivicTrack is a student full-stack project for managing public-benefit schemes a
 - **Backend:** Node.js, Express
 - **Database/ORM:** PostgreSQL, Sequelize
 - **Authentication:** JWT, bcryptjs
-- **Automation:** GitHub Actions
+- **Automation:** GitHub Actions, ESLint, Prettier, Husky/lint-staged, Dependabot
 - **Local containers:** Docker, Docker Compose, Nginx
 
 ## Architecture
@@ -230,9 +230,11 @@ All routes below are under `/api`, except `/health`. Protected routes require `A
 
 GitHub Actions is configured to run:
 - ESLint and Vite production build for the frontend.
-- Backend JavaScript syntax checks.
+- Backend JavaScript syntax checks and ESLint.
+- High-severity dependency audit gates for both npm projects.
 - Schema migration and development seeding against a PostgreSQL 16 service container.
-- Jest/Supertest API integration tests for authentication, district isolation, date filters, approval workflow, audit history, and beneficiary notifications.
+- Jest/Supertest API integration tests for authentication, district isolation, date filters, approval workflow, audit history, beneficiary notifications, invalid input, role denial, and expired tokens.
+- A backend coverage report uploaded as a workflow artifact.
 
 The test suite and CI job are committed, but a green run must be confirmed on the [Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions). Do not treat a configured test as a passing test until the run finishes successfully.
 
