@@ -63,7 +63,7 @@ router.put(
       return res.status(400).json({ message: 'A reason is required when rejecting an application' });
     }
 
-    if (req.user.role === 'district_officer') {
+    if (['district_officer', 'field_officer'].includes(req.user.role)) {
       const user = await User.findByPk(req.user.id, { attributes: ['district'] });
       if (!user?.district) {
         return res.status(403).json({ message: 'No district is assigned to this account' });
