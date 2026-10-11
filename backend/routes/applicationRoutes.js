@@ -41,6 +41,11 @@ router.put(
   async (req, res) => {
     const id = Number.parseInt(req.params.id, 10);
     const { action, remark } = req.body || {};
+    const allowedRolesByStatus = {
+      'Pending Field Officer': ['field_officer'],
+      'Pending District Officer': ['district_officer'],
+      'Pending Admin': ['admin'],
+    };
 
     if (!Number.isInteger(id) || id <= 0) {
       return res.status(400).json({ message: 'Invalid application ID' });
@@ -86,7 +91,26 @@ router.put(
       }
 
       const previousStatus = application.status;
-      const status = action === 'approve' ? 'Approved' : 'Rejected';
+      if (req.user.role !== 'admin' && req.user.role !== 'district_officer' && req.user.role !== 'field_officer') {
+        await transaction.rollback();
+        return res.status(403).json({ message: 'You do not have permission to review applications' });
+      }
+      const authorizedRoles = allowedRolesByStatus[previousStatus];
+      if (!authorizedRoles || !authorizedRoles.includes(req.user.role)) {
+        await transaction.rollback();
+        return res.status(409).json({ message: 'Your role cannot act on an application in its current status' });
+      }
+
+      let status;
+      if (action === 'reject') {
+        status = 'Rejected';
+      } else if (previousStatus === 'Pending Field Officer') {
+        status = 'Pending District Officer';
+      } else if (previousStatus === 'Pending District Officer') {
+        status = 'Pending Admin';
+      } else {
+        status = 'Approved';
+      }
       const currentRemarks = Array.isArray(application.remarks) ? application.remarks : [];
       const normalizedRemark = typeof remark === 'string' ? remark.trim() : '';
       const auditRemark = {
