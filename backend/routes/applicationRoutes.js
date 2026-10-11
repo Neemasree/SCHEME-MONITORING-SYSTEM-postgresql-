@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
+const AuditLog = require('../models/AuditLog');
 const { allowRoles } = require('../middleware/authMiddleware');
 
 router.get('/', async (req, res) => {
@@ -24,9 +25,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Temporary role gate for the existing decision endpoint.
-// A follow-up workflow change must enforce allowed status transitions and use
-// a dedicated audit table before the application is considered production-ready.
 router.put(
   '/:id/approve',
   allowRoles('field_officer', 'district_officer', 'admin'),
@@ -50,35 +48,53 @@ router.put(
       return res.status(400).json({ message: 'A reason is required when rejecting an application' });
     }
 
+    const transaction = await Application.sequelize.transaction();
     try {
-      const application = await Application.findByPk(id);
+      const application = await Application.findByPk(id, {
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
       if (!application) {
+        await transaction.rollback();
         return res.status(404).json({ message: 'Application not found' });
       }
 
-      // Prevent terminal applications from being silently re-decided.
       if (['Approved', 'Rejected'].includes(application.status)) {
+        await transaction.rollback();
         return res.status(409).json({ message: 'This application has already reached a final status' });
       }
 
-      // Keep the current project workflow's simplified status model. Replace
-      // with explicit field -> district -> admin transitions as a planned upgrade.
+      const previousStatus = application.status;
       const status = action === 'approve' ? 'Approved' : 'Rejected';
       const currentRemarks = Array.isArray(application.remarks) ? application.remarks : [];
-      const newRemark = {
+      const normalizedRemark = typeof remark === 'string' ? remark.trim() : '';
+      const auditRemark = {
         userId: req.user.id,
         role: req.user.role,
         date: new Date().toISOString(),
-        text: typeof remark === 'string' ? remark.trim() : '',
+        text: normalizedRemark,
       };
 
       application.status = status;
-      application.remarks = [...currentRemarks, newRemark];
+      application.remarks = [...currentRemarks, auditRemark];
       application.changed('remarks', true);
 
-      await application.save();
+      await application.save({ transaction });
+      await AuditLog.create({
+        entityType: 'application',
+        entityId: application.id,
+        action: action === 'approve' ? 'application_approved' : 'application_rejected',
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        previousStatus,
+        newStatus: status,
+        remark: normalizedRemark || null,
+      }, { transaction });
+
+      await transaction.commit();
       return res.json({ message: `Application ${status.toLowerCase()} successfully`, application });
     } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
       console.error('Update application failed:', error);
       return res.status(500).json({ message: 'Unable to update this application' });
     }
