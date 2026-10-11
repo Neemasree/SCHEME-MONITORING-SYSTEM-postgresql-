@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
-const { authenticate } = require('../middleware/authMiddleware');
+const { authenticate, allowRoles } = require('../middleware/authMiddleware');
 const User = require('../models/User');
 const { fn, col, literal } = require('sequelize');
 
 // Return live application-based district metrics, not stale manually seeded ratings.
-router.get('/', authenticate, async (req, res) => {
+router.get('/', authenticate, allowRoles('admin', 'district_officer', 'field_officer'), async (req, res) => {
   try {
     const where = {};
-    if (req.user.role === 'district_officer') {
+    if (['district_officer', 'field_officer'].includes(req.user.role)) {
       const user = await User.findByPk(req.user.id, { attributes: ['district'] });
       if (!user?.district) {
         return res.status(403).json({ message: 'No district is assigned to this account' });
