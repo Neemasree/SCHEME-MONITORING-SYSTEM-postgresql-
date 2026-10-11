@@ -3,6 +3,8 @@ const router = express.Router();
 const Scheme = require('../models/Scheme');
 const User = require('../models/User');
 const { allowRoles } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { schemeSchema } = require('../validation/schemas');
 
 const parsePositiveInt = (value, fallback, max = 100) => {
   const parsed = Number.parseInt(value, 10);
@@ -51,7 +53,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-router.post('/', allowRoles('admin'), async (req, res) => {
+router.post('/', allowRoles('admin'), validate(schemeSchema), async (req, res) => {
   const {
     schemeName,
     description,
