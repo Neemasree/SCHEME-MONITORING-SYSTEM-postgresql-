@@ -10,7 +10,11 @@ module.exports = [
       sourceType: 'commonjs',
       globals: { ...globals.node },
     },
-    rules: { ...js.configs.recommended.rules, 'no-console': 'off' },
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-console': 'off',
+      'no-unused-vars': ['error', { argsIgnorePattern: '^_', caughtErrorsIgnorePattern: '^_' }],
+    },
   },
   {
     files: ['tests/**/*.js'],
