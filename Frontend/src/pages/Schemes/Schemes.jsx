@@ -11,6 +11,7 @@ const Schemes = ({ role, searchTerm = '' }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
     const [refreshKey, setRefreshKey] = useState(0);
 
     const fetchSchemes = async () => {
@@ -57,7 +58,7 @@ const Schemes = ({ role, searchTerm = '' }) => {
     );
 
     const handleActionClick = (row) => {
-        window.alert(`Details for ${row.name}:\n${row.description || 'No description provided.'}`);
+        setNotice(`${row.name}: ${row.description || 'No description provided.'}`);
     };
 
     const handleSaveScheme = async (newScheme) => {
@@ -66,7 +67,7 @@ const Schemes = ({ role, searchTerm = '' }) => {
             setIsModalOpen(false);
             setRefreshKey((key) => key + 1);
         } catch (requestError) {
-            window.alert(requestError.response?.data?.message || 'Failed to save scheme. Please try again.');
+            setError(requestError.response?.data?.message || 'Failed to save scheme. Please try again.');
         }
     };
 
@@ -85,6 +86,7 @@ const Schemes = ({ role, searchTerm = '' }) => {
             </div>
 
             {error && <div className="error-banner" role="alert">{error}</div>}
+            {notice && <div className="notice-banner" role="status">{notice}</div>}
             <div className="schemes-content slideUp" style={{ animationDelay: '0.1s' }}>
                 {isLoading ? <SkeletonTable rows={8} /> : (
                     <StatusTable
