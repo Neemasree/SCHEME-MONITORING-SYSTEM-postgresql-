@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 const { connectDB } = require('./config/db');
-const { authenticate } = require('./middleware/authMiddleware');
+const { authenticate, allowRoles } = require('./middleware/authMiddleware');
 
 // Routes
 const dashboardRoutes = require('./routes/dashboardRoutes');
@@ -28,11 +28,20 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/auth', authRoutes);
 
-// Existing protected API groups now require a valid user token.
-// Add per-route allowRoles(...) checks for mutations before production use.
+// All existing API groups require a valid user token. Basic mutation role
+// restrictions are applied here; application-specific transition checks still
+// belong inside the workflow route/controller before production use.
 app.use('/api/dashboard', authenticate, dashboardRoutes);
-app.use('/api/schemes', authenticate, schemeRoutes);
-app.use('/api/applications', authenticate, applicationRoutes);
+app.use('/api/schemes', authenticate, (req, res, next) => {
+  if (req.method === 'POST') return allowRoles('admin')(req, res, next);
+  return next();
+}, schemeRoutes);
+app.use('/api/applications', authenticate, (req, res, next) => {
+  if (req.method === 'PUT' || req.method === 'PATCH' || req.method === 'DELETE') {
+    return allowRoles('admin', 'district_officer', 'field_officer')(req, res, next);
+  }
+  return next();
+}, applicationRoutes);
 app.use('/api/performance', authenticate, performanceRoutes);
 app.use('/api/notifications', authenticate, notificationRoutes);
 
