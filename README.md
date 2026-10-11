@@ -1,4 +1,4 @@
-# CivicTrack — Government Scheme Monitoring System
+# CivicTrack — Scheme Monitoring System
 
 A full-stack application for managing government schemes, reviewing beneficiary applications, and monitoring district-level performance through role-specific dashboards.
 
