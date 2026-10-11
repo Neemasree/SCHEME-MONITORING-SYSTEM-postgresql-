@@ -13,6 +13,7 @@ const Applications = ({ role, searchTerm = '' }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [history, setHistory] = useState([]);
+    const [actionError, setActionError] = useState('');
 
     const fetchApplications = async () => {
         setIsLoading(true);
@@ -103,13 +104,14 @@ const Applications = ({ role, searchTerm = '' }) => {
     };
 
     const submitDecision = async (app, action, remark) => {
+        setActionError('');
         try {
             await api.put(`/applications/${app._id}/approve`, { action, remark });
             await fetchApplications();
             setIsModalOpen(false);
             setSelectedApp(null);
         } catch (requestError) {
-            window.alert(requestError.response?.data?.message || `Failed to ${action} application.`);
+            setActionError(requestError.response?.data?.message || `Failed to ${action} application.`);
         }
     };
 
@@ -155,7 +157,9 @@ const Applications = ({ role, searchTerm = '' }) => {
                     data={selectedApp}
                     role={role}
                     history={history}
+                    actionError={actionError}
                     onClose={() => {
+                        setActionError('');
                         setIsModalOpen(false);
                         setSelectedApp(null);
                     }}
