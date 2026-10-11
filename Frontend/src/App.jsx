@@ -63,6 +63,23 @@ const ScrollToTop = () => {
   useEffect(() => {
     const el = document.getElementById('scrollable-content');
     if (el) el.scrollTo(0, 0);
+
+    const routeTitles = [
+      [/^\/login\/?$/, 'Sign in'],
+      [/^\/register\/?$/, 'Create account'],
+      [/^\/admin\/dashboard\/?$/, 'Admin dashboard'],
+      [/^\/district\/dashboard\/?$/, 'District dashboard'],
+      [/^\/field\/dashboard\/?$/, 'Field dashboard'],
+      [/^\/beneficiary\/applications\/?$/, 'My applications'],
+      [/^\/admin\/schemes\/?$|^\/(district|field)\/schemes\/?$/, 'Schemes'],
+      [/^\/admin\/applications\/?$|^\/(district|field)\/applications\/?$/, 'Applications'],
+      [/^\/admin\/users\/?$/, 'User management'],
+      [/^\/admin\/reports\/?$/, 'Reports'],
+      [/^\/admin\/districts\/?$/, 'District performance'],
+      [/\/notifications\/?$/, 'Notifications'],
+    ];
+    const match = routeTitles.find(([pattern]) => pattern.test(pathname));
+    document.title = match ? `${match[1]} | CivicTrack` : 'CivicTrack | Scheme Monitoring';
   }, [pathname]);
   return null;
 };
