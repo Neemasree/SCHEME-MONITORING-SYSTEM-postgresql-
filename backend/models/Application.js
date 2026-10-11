@@ -8,29 +8,47 @@ const Application = sequelize.define('Application', {
     autoIncrement: true,
   },
   beneficiary: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(150),
     allowNull: false,
+    validate: { notEmpty: true, len: [2, 150] },
   },
   scheme: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(200),
     allowNull: false,
+    validate: { notEmpty: true },
   },
   district: {
-    type: DataTypes.STRING,
+    type: DataTypes.STRING(100),
     allowNull: false,
+    validate: { notEmpty: true },
   },
   status: {
-    type: DataTypes.STRING,
+    type: DataTypes.ENUM(
+      'Submitted',
+      'Pending Field Officer',
+      'Pending District Officer',
+      'Pending Admin',
+      'Approved',
+      'Rejected'
+    ),
     allowNull: false,
+    defaultValue: 'Pending Field Officer',
   },
   dateApplied: {
     type: DataTypes.DATEONLY,
     allowNull: false,
   },
   remarks: {
-    type: DataTypes.JSON,
+    type: DataTypes.JSONB,
+    allowNull: false,
     defaultValue: [],
   },
+}, {
+  indexes: [
+    { fields: ['status'] },
+    { fields: ['district', 'status'] },
+    { fields: ['dateApplied'] },
+  ],
 });
 
 module.exports = Application;
