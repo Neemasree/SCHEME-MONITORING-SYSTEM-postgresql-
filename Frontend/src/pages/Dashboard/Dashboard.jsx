@@ -10,6 +10,7 @@ const Dashboard = ({ role, username }) => {
     const [stats, setStats] = useState(null);
     const [analytics, setAnalytics] = useState({ statusData: [], schemeData: [], districtStats: [], trendData: [] });
     const [error, setError] = useState('');
+    const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
@@ -32,7 +33,7 @@ const Dashboard = ({ role, username }) => {
         };
 
         fetchDashboardData();
-    }, []);
+    }, [retryCount]);
 
     const greeting = {
         admin: `Welcome Administrator ${username}. System metrics are live.`,
@@ -47,52 +48,57 @@ const Dashboard = ({ role, username }) => {
                 <p className="page-subtitle">{greeting[role] || greeting.field}</p>
             </div>
 
-            {error && <div className="error-banner" role="alert">{error}</div>}
+            {error && (
+                <div className="error-banner" role="alert">
+                    <p>{error}</p>
+                    <button type="button" onClick={() => setRetryCount((count) => count + 1)}>Try again</button>
+                </div>
+            )}
 
             <DashboardCards role={role} isLoading={isLoading} stats={stats} />
 
             <div className="charts-grid animate-fade-in" style={{ animationDelay: '0.2s' }}>
                 {/* District Performance */}
                 <div className="chart-span-2">
-                    {isLoading ? <SkeletonChart /> : (
+                    {isLoading ? <SkeletonChart /> : analytics.districtStats.length > 0 ? (
                         <BarGraph
                             data={analytics.districtStats}
                             title="District Performance (Total Applications)"
                             dataKey="total"
                             xAxisKey="district"
                         />
-                    )}
+                    ) : <p className="empty-state" role="status">No district performance data is available yet.</p>}
                 </div>
 
                 {/* Monthly Trends */}
                 <div className="chart-span-2">
-                    {isLoading ? <SkeletonChart /> : (
+                    {isLoading ? <SkeletonChart /> : analytics.trendData.length > 0 ? (
                         <LineGraph
                             data={analytics.trendData}
                             title="Application Inflow Trend (All Available Months)"
                             dataKey="applications"
                             xAxisKey="month"
                         />
-                    )}
+                    ) : <p className="empty-state" role="status">No application trend data is available yet.</p>}
                 </div>
 
                 {/* Analytics Distribution */}
                 <div className="chart-item">
-                    {isLoading ? <SkeletonChart /> : (
+                    {isLoading ? <SkeletonChart /> : analytics.statusData.length > 0 ? (
                         <PieGraph
                             data={analytics.statusData}
                             title="Application Status Distribution"
                         />
-                    )}
+                    ) : <p className="empty-state" role="status">No application status data is available yet.</p>}
                 </div>
 
                 <div className="chart-item">
-                    {isLoading ? <SkeletonChart /> : (
+                    {isLoading ? <SkeletonChart /> : analytics.schemeData.length > 0 ? (
                         <PieGraph
                             data={analytics.schemeData}
                             title="Applications by Scheme Type"
                         />
-                    )}
+                    ) : <p className="empty-state" role="status">No scheme application data is available yet.</p>}
                 </div>
             </div>
         </div>
