@@ -1,58 +1,116 @@
 # CivicTrack — Scheme Monitoring System
 
-A full-stack application for managing government schemes, reviewing beneficiary applications, and monitoring district-level performance through role-specific dashboards.
+[![CI](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions/workflows/ci.yml/badge.svg)](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions/workflows/ci.yml)
 
-> **Project status:** Student full-stack project in active development. Features listed under *Planned upgrades* are goals, not claims about current production functionality.
+CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
 
-## Overview
+> **Status:** Development project. CI currently checks frontend lint/build and backend JavaScript syntax. PostgreSQL integration tests, production deployment, and role-specific screenshots are still pending; no live URL is claimed here.
 
-CivicTrack is designed around a multi-level review workflow for public-sector scheme applications. It provides a web interface for administrators and officers to manage schemes, review applications, see performance summaries, and receive notifications.
+## What it does
 
-## Tech Stack
+- JWT authentication and server-side role checks.
+- Beneficiary registration, application submission, status tracking, and review remarks.
+- Field Officer → District Officer → Admin review stages, with rejection reasons.
+- District-scoped application listings and analytics for officer roles.
+- Audit events and a timeline endpoint for application history.
+- Recipient-specific notifications when applications move through the workflow.
+- Admin user management: create accounts, assign officer districts, list accounts, and deactivate users.
+- PostgreSQL-backed dashboard analytics and paginated scheme listing.
 
-- **Frontend:** React, Vite, React Router, Axios, Recharts, Lucide React
+## Stack
+
+- **Frontend:** React, Vite, React Router, Axios, Recharts
 - **Backend:** Node.js, Express
-- **Database:** PostgreSQL
-- **ORM:** Sequelize
-- **Authentication foundations:** JSON Web Tokens (JWT), bcryptjs
-
-## Current Capabilities
-
-- Role-specific navigation and dashboards for administrators, district officers, and field officers
-- Scheme listing and scheme creation
-- Application listing and status-update endpoint
-- Dashboard statistics and district/scheme charts
-- Notifications with read-status updates
-- PostgreSQL models for users, schemes, applications, performance, and notifications
-- Development seed data for exploring the UI locally
+- **Database/ORM:** PostgreSQL, Sequelize
+- **Authentication:** JWT, bcryptjs
+- **Automation:** GitHub Actions
 
 ## Architecture
 
 ```text
 React + Vite
-    |
-    | HTTP / JSON
-    v
-Express REST API
-    |
-    v
+    │ HTTPS / JSON + JWT
+    ▼
+Express REST API ── role and district authorization
+    │
+    ▼
 Sequelize ORM
-    |
-    v
+    │
+    ▼
 PostgreSQL
 ```
 
-The frontend lives in `Frontend/`; the API and database code live in `backend/`.
+### Approval workflow
 
-## Run Locally
+```mermaid
+stateDiagram-v2
+    [*] --> PendingFieldOfficer: Beneficiary submits
+    PendingFieldOfficer --> PendingDistrictOfficer: Field officer approves
+    PendingFieldOfficer --> Rejected: Field officer rejects
+    PendingDistrictOfficer --> PendingAdmin: District officer approves
+    PendingDistrictOfficer --> Rejected: District officer rejects
+    PendingAdmin --> Approved: Admin approves
+    PendingAdmin --> Rejected: Admin rejects
+    Approved --> [*]
+    Rejected --> [*]
+```
+
+### Data model (current logical relationships)
+
+```mermaid
+erDiagram
+    USERS ||--o{ APPLICATIONS : submits
+    USERS ||--o{ NOTIFICATIONS : receives
+    USERS ||--o{ AUDIT_LOGS : performs
+    APPLICATIONS ||--o{ AUDIT_LOGS : records
+    USERS {
+      int id PK
+      string email
+      string role
+      string district
+      boolean isActive
+    }
+    APPLICATIONS {
+      int id PK
+      int beneficiaryUserId FK
+      string scheme
+      string district
+      string status
+      date dateApplied
+    }
+    NOTIFICATIONS {
+      int id PK
+      int userId FK
+      string role
+      string title
+      boolean isRead
+    }
+    AUDIT_LOGS {
+      bigint id PK
+      int entityId
+      int actorId
+      string action
+      string previousStatus
+      string newStatus
+    }
+```
+
+**Design decisions**
+- The API—not the browser—decides which roles may perform each approval transition.
+- District scope is derived from the authenticated user's account, not trusted from a request parameter.
+- Each approval/rejection is written to an audit log inside the same transaction as the status update.
+- Beneficiary accounts can be created publicly, but privileged accounts are provisioned by an administrator.
+- Seed data is for local demos only; do not use the demo password or seeded personal details in a public deployment.
+
+## Run locally
 
 ### Prerequisites
 
-- Node.js and npm
+- Node.js 22+
 - PostgreSQL
 - Git
 
-### 1. Clone the repository
+### 1. Clone
 
 ```bash
 git clone https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-.git
@@ -69,7 +127,7 @@ CREATE DATABASE govt_monitoring;
 
 ### 3. Configure the backend
 
-Create `backend/.env` and provide your local database configuration:
+Create `backend/.env`:
 
 ```env
 PORT=5000
@@ -84,9 +142,9 @@ SQL_LOGGING=false
 DB_POOL_MAX=10
 ```
 
-Never commit real credentials or production secrets. Configure environment variables in your deployment platform as well.
+Never commit real credentials or production secrets.
 
-### 4. Install backend dependencies and seed development data
+### 4. Install and seed the backend
 
 ```bash
 cd backend
@@ -95,13 +153,13 @@ npm run seed
 npm run dev
 ```
 
-**Warning:** The current development seed script uses `sequelize.sync({ force: true })`, which drops and recreates tables. Use it only with a disposable local database. Do not run it against data you need to preserve.
+**Important:** the current development seed command still uses `sequelize.sync({ force: true })`, which drops and recreates tables. Run it only against a disposable local database. Migration-based schema setup is a remaining engineering task.
 
-The API is configured to listen on port `5000` by default.
+The API listens on `http://localhost:5000` by default. Health check: `GET /health`.
 
 ### 5. Start the frontend
 
-Open a second terminal:
+In a second terminal:
 
 ```bash
 cd Frontend
@@ -109,44 +167,61 @@ npm install
 npm run dev
 ```
 
-Open the local URL printed by Vite (usually `http://localhost:5173`).
+Vite normally serves the UI at `http://localhost:5173`. Set `VITE_API_URL` if the API is hosted elsewhere; its default is `http://localhost:5000/api`.
 
-## API Areas
+### Demo accounts
 
-| Area | Base path | Current purpose |
+The seed script currently creates these local-only officer accounts:
+
+| Role | Email | Password |
 |---|---|---|
-| Authentication | `/api/auth` | Login and registration |
-| Dashboard | `/api/dashboard` | Summary statistics and analytics |
-| Schemes | `/api/schemes` | List and create schemes |
-| Applications | `/api/applications` | List applications and update decisions |
-| Performance | `/api/performance` | District performance data |
-| Notifications | `/api/notifications` | List notifications and mark them read |
+| Admin | `admin@govt.in` | `password123` |
+| District Officer (Salem) | `district@govt.in` | `password123` |
+| Field Officer (Salem) | `field@govt.in` | `password123` |
 
-Confirm endpoint protection and permissions before exposing this API publicly.
+Register a beneficiary through the UI. **Change/remove these credentials before any shared or deployed demo.**
 
-## Planned Upgrades
+## API overview
 
-- Enforce JWT authentication and server-side role-based authorization on protected endpoints.
-- Prevent public self-registration with privileged roles.
-- Implement a validated, multi-stage application approval workflow.
-- Create a dedicated audit-log table for immutable decision history.
-- Normalize database relationships with foreign keys, constraints, indexes, and Sequelize migrations.
-- Replace seeded chart values with SQL-backed analytics calculated from live records.
-- Add request validation, centralized error handling, pagination, and rate limiting.
-- Add API tests and frontend build/lint checks in GitHub Actions.
-- Containerize the application with Docker and document deployment.
+All routes below are under `/api`, except `/health`. Protected routes require `Authorization: Bearer <token>`.
 
-## Security Notes
+| Method | Endpoint | Access | Purpose |
+|---|---|---|---|
+| POST | `/auth/login` | Public | Sign in |
+| POST | `/auth/register` | Public | Register a beneficiary |
+| GET | `/auth/users` | Admin | List users |
+| POST | `/auth/users` | Admin | Create a user |
+| PATCH | `/auth/users/:id/deactivate` | Admin | Deactivate a user |
+| GET | `/schemes` | Authenticated | List/filter schemes |
+| POST | `/schemes` | Admin | Create a scheme |
+| GET | `/applications` | Authenticated | List applications within the caller's scope |
+| POST | `/applications` | Beneficiary | Apply to an active scheme |
+| PUT | `/applications/:id/approve` | Field/District/Admin | Approve, forward, or reject at the permitted stage |
+| GET | `/applications/:id/history` | Authorized application viewer | Read the audit timeline |
+| GET | `/dashboard/stats` | Admin/Field/District | Summary counts |
+| GET | `/dashboard/analytics` | Admin/Field/District | SQL-backed analytics; optional `startDate`, `endDate`, and admin `district` |
+| GET | `/performance` | Authenticated | District-level metrics |
+| GET | `/notifications` | Authenticated | List recipient notifications |
+| PUT | `/notifications/:id/read` | Authenticated | Mark an accessible notification as read |
 
-This repository is a development project and should not be used with real beneficiary or sensitive personal data until security and privacy controls have been reviewed. In particular, ensure JWT signing secrets are mandatory and never fall back to a hardcoded secret; restrict registration roles; protect APIs with authentication and authorization; use HTTPS in deployment; and store only the data necessary for the workflow.
+## CI and verification
 
-## Contributing
+GitHub Actions currently runs:
+- ESLint and Vite production build for the frontend.
+- JavaScript syntax checks for backend files.
 
-1. Create a feature branch.
-2. Make a focused change.
-3. Run the applicable checks locally.
-4. Open a pull request describing the change and its test coverage.
+The project still needs PostgreSQL-backed integration tests for login, role access, district isolation, and every workflow transition. A green syntax/build workflow alone does not prove database workflows work end-to-end.
+
+## Evidence and deployment status
+
+- **Screenshots/GIF:** to be added after each role is run against a seeded database.
+- **Live deployment:** not yet configured. Vercel + Render + managed PostgreSQL and Docker Compose remain follow-up tasks.
+- **Repository topics/description:** should be set in GitHub repository settings.
+
+## Security note
+
+This project is not approved for real beneficiary or sensitive personal data. Before production use, complete and verify database migrations, login rate limiting, security headers, short-lived tokens, centralized error handling, automated integration tests, backups, privacy review, and a deployment secrets review.
 
 ## License
 
-No license is currently specified. Add a license file if you intend to allow others to reuse the project.
+Released under the MIT License; see [LICENSE](LICENSE).
