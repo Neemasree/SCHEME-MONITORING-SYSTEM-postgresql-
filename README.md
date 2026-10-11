@@ -149,11 +149,12 @@ Never commit real credentials or production secrets.
 ```bash
 cd backend
 npm install
+npm run migrate
 npm run seed
 npm run dev
 ```
 
-**Important:** the current development seed command still uses `sequelize.sync({ force: true })`, which drops and recreates tables. Run it only against a disposable local database. Migration-based schema setup is a remaining engineering task.
+The migration runner tracks applied SQL migrations in `SequelizeMeta` and does not intentionally drop existing tables. The current migration runner also uses non-destructive Sequelize sync to bootstrap missing tables; review schema changes carefully before applying them to production.
 
 The API listens on `http://localhost:5000` by default. Health check: `GET /health`.
 
