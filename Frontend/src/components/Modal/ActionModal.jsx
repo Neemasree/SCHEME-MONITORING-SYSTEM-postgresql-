@@ -1,10 +1,53 @@
 import { X, Check, XCircle, Clock, MessageSquare } from 'lucide-react';
 import StatusBadge from '../Badge/StatusBadge';
 import './ActionModal.css';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history = [], actionError = '' }) => {
     const [remarks, setRemarks] = useState('');
+    const modalRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen || !data) return undefined;
+
+        const previouslyFocused = document.activeElement;
+        const modal = modalRef.current;
+        const getFocusable = () => modal?.querySelectorAll(
+            'button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
+        ) || [];
+        getFocusable()[0]?.focus();
+
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                onClose();
+                return;
+            }
+            if (event.key !== 'Tab') return;
+
+            const focusable = Array.from(getFocusable());
+            if (focusable.length === 0) {
+                event.preventDefault();
+                modal?.focus();
+                return;
+            }
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        return () => {
+            document.removeEventListener('keydown', handleKeyDown);
+            if (previouslyFocused instanceof HTMLElement) previouslyFocused.focus();
+        };
+    }, [isOpen, data, onClose]);
 
     if (!isOpen || !data) return null;
 
@@ -37,9 +80,9 @@ const ActionModal = ({ isOpen, onClose, data, onApprove, onReject, role, history
 
     return (
         <div className="modal-backdrop fadeIn" onClick={handleBackdropClick}>
-            <div className="modal-content glass-card slideUp">
+            <div className="modal-content glass-card slideUp" ref={modalRef} role="dialog" aria-modal="true" aria-labelledby="application-modal-title" tabIndex={-1}>
                 <div className="modal-header">
-                    <h2 className="modal-title">Application Details</h2>
+                    <h2 className="modal-title" id="application-modal-title">Application Details</h2>
                     <button className="close-btn" onClick={onClose} aria-label="Close modal">
                         <X size={20} />
                     </button>
