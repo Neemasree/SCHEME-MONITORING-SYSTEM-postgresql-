@@ -10,33 +10,15 @@ const sendServerError = (res, label, error) => {
 
 exports.getStats = async (_req, res) => {
   try {
-    const [
-      totalSchemes,
-      totalApplications,
-      approvedApplications,
-      rejectedApplications,
-      pendingApplications,
-    ] = await Promise.all([
+    const [totalSchemes, totalApplications, approvedApplications, rejectedApplications, pendingApplications] = await Promise.all([
       Scheme.count(),
       Application.count(),
       Application.count({ where: { status: 'Approved' } }),
       Application.count({ where: { status: 'Rejected' } }),
-      Application.count({
-        where: {
-          status: {
-            [Op.in]: ['Pending Field Officer', 'Pending District Officer', 'Pending Admin'],
-          },
-        },
-      }),
+      Application.count({ where: { status: { [Op.in]: ['Pending Field Officer', 'Pending District Officer', 'Pending Admin'] } } }),
     ]);
 
-    return res.json({
-      totalSchemes,
-      totalApplications,
-      approvedApplications,
-      rejectedApplications,
-      pendingApplications,
-    });
+    return res.json({ totalSchemes, totalApplications, approvedApplications, rejectedApplications, pendingApplications });
   } catch (error) {
     return sendServerError(res, 'Dashboard statistics', error);
   }
@@ -45,16 +27,14 @@ exports.getStats = async (_req, res) => {
 exports.getAnalytics = async (req, res) => {
   const { startDate, endDate, district } = req.query || {};
   const where = {};
+  const isDate = (value) => typeof value === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(value);
 
-  if (typeof startDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
-    where.dateApplied = { ...(where.dateApplied || {}), [Op.gte]: startDate };
-  }
-  if (typeof endDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
-    where.dateApplied = { ...(where.dateApplied || {}), [Op.lte]: endDate };
-  }
-  if (typeof district === 'string' && district.trim()) {
-    where.district = district.trim();
-  }
+  if (startDate && !isDate(startDate)) return res.status(400).json({ message: 'startDate must use YYYY-MM-DD format' });
+  if (endDate && !isDate(endDate)) return res.status(400).json({ message: 'endDate must use YYYY-MM-DD format' });
+  if (isDate(startDate)) where.dateApplied = { ...(where.dateApplied || {}), [Op.gte]: startDate };
+  if (isDate(endDate)) where.dateApplied = { ...(where.dateApplied || {}), [Op.lte]: endDate };
+  if (startDate && endDate && startDate > endDate) return res.status(400).json({ message: 'startDate must be on or before endDate' });
+  if (typeof district === 'string' && district.trim()) where.district = district.trim();
 
   try {
     const [districtRows, statusRows, schemeRows, trendRows] = await Promise.all([
@@ -70,18 +50,8 @@ exports.getAnalytics = async (req, res) => {
         group: ['district'],
         raw: true,
       }),
-      Application.findAll({
-        where,
-        attributes: ['status', [fn('COUNT', col('id')), 'value']],
-        group: ['status'],
-        raw: true,
-      }),
-      Application.findAll({
-        where,
-        attributes: ['scheme', [fn('COUNT', col('id')), 'value']],
-        group: ['scheme'],
-        raw: true,
-      }),
+      Application.findAll({ where, attributes: ['status', [fn('COUNT', col('id')), 'value']], group: ['status'], raw: true }),
+      Application.findAll({ where, attributes: ['scheme', [fn('COUNT', col('id')), 'value']], group: ['scheme'], raw: true }),
       sequelize.query(
         `SELECT TO_CHAR("dateApplied", 'YYYY-MM') AS month, COUNT(id)::int AS applications
          FROM "Applications"
@@ -91,28 +61,27 @@ exports.getAnalytics = async (req, res) => {
          GROUP BY TO_CHAR("dateApplied", 'YYYY-MM')
          ORDER BY month`,
         {
-          replacements: {
-            startDate: /^\d{4}-\d{2}-\d{2}$/.test(startDate || '') ? startDate : null,
-            endDate: /^\d{4}-\d{2}-\d{2}$/.test(endDate || '') ? endDate : null,
-            district: typeof district === 'string' && district.trim() ? district.trim() : null,
-          },
+          replacements: { startDate: isDate(startDate) ? startDate : null, endDate: isDate(endDate) ? endDate : null, district: typeof district === 'string' && district.trim() ? district.trim() : null },
           type: QueryTypes.SELECT,
         }
       ),
     ]);
 
-    return res.json({
-      districtStats: districtRows.map((row) => ({
-        district: row.district,
-        total: Number(row.total),
-        approved: Number(row.approved || 0),
-        pending: Number(row.pending || 0),
-        rejected: Number(row.rejected || 0),
-      })),
+    const response = {
+      districtStats: districtRows.map((row) => ({ district: row.district, total: Number(row.total), approved: Number(row.approved || 0), pending: Number(row.pending || 0), rejected: Number(row.rejected || 0) })),
       statusData: statusRows.map((row) => ({ name: row.status, value: Number(row.value) })),
       schemeData: schemeRows.map((row) => ({ name: row.scheme || 'Unknown Scheme', value: Number(row.value) })),
       trendData: trendRows.map((row) => ({ month: row.month, applications: Number(row.applications) })),
-    });
+    };
+
+    if (req.user?.role === 'district_officer') {
+      const User = require('../models/User');
+      const user = await User.findByPk(req.user.id, { attributes: ['district'] });
+      if (!user?.district) return res.status(403).json({ message: 'No district is assigned to this account' });
+      response.districtStats = response.districtStats.filter((row) => row.district === user.district);
+    }
+
+    return res.json(response);
   } catch (error) {
     return sendServerError(res, 'Dashboard analytics', error);
   }
