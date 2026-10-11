@@ -30,8 +30,31 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend syntax checks
+    name: Backend syntax and PostgreSQL integration tests
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: govt_monitoring
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d govt_monitoring"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DB_NAME: govt_monitoring
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_HOST: 127.0.0.1
+      DB_PORT: 5432
+      JWT_SECRET: test-only-ci-secret-with-sufficient-length
+      CLIENT_ORIGIN: http://localhost:5173
+      SQL_LOGGING: "false"
     defaults:
       run:
         working-directory: backend
@@ -47,3 +70,9 @@ jobs:
       - name: Check JavaScript syntax
         run: |
           find . -path './node_modules' -prune -o -name '*.js' -type f -print0 | xargs -0 -n1 node --check
+      - name: Apply database migrations
+        run: npm run migrate
+      - name: Seed disposable CI database
+        run: npm run seed
+      - name: Run PostgreSQL API integration tests
+        run: npm test
