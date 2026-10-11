@@ -12,6 +12,7 @@ const Sidebar = ({ role, onLogout }) => {
         { path: `/${role}/dashboard`, name: 'Dashboard', icon: <LayoutDashboard size={20} />, roles: ['admin', 'district', 'field'] },
         { path: `/${role}/schemes`, name: 'Schemes', icon: <FileText size={20} />, roles: ['admin', 'district', 'field'] },
         { path: `/${role}/applications`, name: 'Applications', icon: <CheckSquare size={20} />, roles: ['admin', 'district', 'field', 'beneficiary'] },
+        { path: '/admin/users', name: 'User Management', icon: <Users size={20} />, roles: ['admin'] },
         { path: '/admin/districts', name: 'District Performance', icon: <TrendingUp size={20} />, roles: ['admin'] },
         { path: '/admin/reports', name: 'Reports & Analytics', icon: <Users size={20} />, roles: ['admin'] },
     ];
