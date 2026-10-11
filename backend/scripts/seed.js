@@ -1,4 +1,6 @@
 const { sequelize } = require('../config/db');
+// Register every model (including AuditLog) before sequelize.sync().
+require('../models');
 const Scheme = require('../models/Scheme');
 const Application = require('../models/Application');
 const DistrictPerformance = require('../models/Performance');
