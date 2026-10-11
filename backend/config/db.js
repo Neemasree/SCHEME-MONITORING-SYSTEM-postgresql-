@@ -11,7 +11,7 @@ const sequelize = new Sequelize(
     port: env.DB_PORT,
     logging: env.SQL_LOGGING === 'true' ? console.log : false,
     ...(env.NODE_ENV === 'production'
-      ? { dialectOptions: { ssl: { require: true, rejectUnauthorized: false } } }
+      ? { dialectOptions: { ssl: { require: true, rejectUnauthorized: true } } }
       : {}),
     pool: {
       max: env.DB_POOL_MAX,
