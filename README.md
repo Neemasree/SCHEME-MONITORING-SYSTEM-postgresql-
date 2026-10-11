@@ -4,7 +4,7 @@
 
 CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
 
-> **Status:** Development project. GitHub Actions is configured for frontend lint/build and PostgreSQL-backed API integration tests; verify the latest run on the Actions page before treating it as green. Docker Compose is available for local evaluation. No hosted production URL is claimed because deployment has not been verified.
+> **Status:** Development project. GitHub Actions runs frontend lint/build and PostgreSQL-backed API integration tests. The observed test run passed, but the full pipeline remains red until dependency-audit findings are resolved. Docker Compose is available for local evaluation. No hosted production URL is claimed because deployment has not been verified.
 
 ## What it does
 
@@ -247,7 +247,7 @@ GitHub Actions is configured to run:
 - A backend coverage report uploaded as a workflow artifact.
 - Dependency audit checks. Current audit findings must be resolved before CI can be considered green.
 
-The test suite and CI job are committed, but a green run must be confirmed on the [Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions). Do not treat a configured test as a passing test until the run finishes successfully.
+The PostgreSQL integration suite passed in [run 38149401592](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions/runs/38149401592): backend syntax, lint, migrations, seed, and API tests succeeded; frontend lint and build also succeeded. The overall run failed only at the dependency-audit gates because the current lockfiles still contain known advisories. Check the [latest Actions run](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for any newer result.
 
 ## Evidence and deployment status
 
