@@ -76,7 +76,8 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
     const roleDisplay = {
         admin: { label: 'System Admin', color: 'admin-badge' },
         district: { label: 'District Officer', color: 'district-badge' },
-        field: { label: 'Field Officer', color: 'field-badge' }
+        field: { label: 'Field Officer', color: 'field-badge' },
+        beneficiary: { label: 'Beneficiary', color: 'beneficiary-badge' }
     };
 
     const currentRole = roleDisplay[role] || roleDisplay.field;
