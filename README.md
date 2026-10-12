@@ -4,7 +4,7 @@
 
 CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
 
-> **Status:** Portfolio project under hardening; not yet production-ready. The latest inspected GitHub Actions run passed frontend lint/build, backend syntax/lint, database migration, seeding, and PostgreSQL-backed API integration tests. Both CI jobs still fail at `npm audit --audit-level=high`, so dependency remediation and a green full pipeline remain outstanding. Docker Compose and hosted-deployment templates are provided, but a live deployment has not been verified.
+> **Status:** Portfolio project under hardening; not yet production-ready. CI now applies only compatible npm security updates (never `npm audit fix --force`), checks frontend lint/build and backend syntax/lint, migrations, seeding, PostgreSQL-backed API integration tests, and blocks high/critical dependency advisories. The latest inspected run passed these checks and committed the refreshed lockfiles directly to `main`; a fresh run is validating the resulting repository head. Docker Compose and hosted-deployment templates are provided, but a live deployment has not been verified.
 
 ## What it does
 
