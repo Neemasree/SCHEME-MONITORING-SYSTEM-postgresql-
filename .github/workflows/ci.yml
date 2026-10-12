@@ -6,35 +6,45 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   frontend:
-    name: Frontend lint and build
-    runs-on: ubuntu-latest
+    name: Frontend lint, build, and dependency audit
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: Frontend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
           cache-dependency-path: Frontend/package-lock.json
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
+      - name: Apply compatible security patches
+        run: npm audit fix --audit-level=high
       - name: Lint
         run: npm run lint
       - name: Build
         run: npm run build
-      - name: Dependency audit
-        if: always()
+      - name: Verify high and critical dependency vulnerabilities
         run: npm audit --audit-level=high
+      - name: Upload validated frontend lockfile
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-lockfile
+          path: Frontend/package-lock.json
+          if-no-files-found: error
 
   backend:
-    name: Backend syntax and PostgreSQL integration tests
-    runs-on: ubuntu-latest
+    name: Backend syntax, PostgreSQL integration tests, and dependency audit
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:16
@@ -63,13 +73,15 @@ jobs:
         working-directory: backend
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm install
+          node-version: 24
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Apply compatible security patches
+        run: npm audit fix --audit-level=high
       - name: Check JavaScript syntax
         run: |
           find . -path './node_modules' -prune -o -name '*.js' -type f -print0 | xargs -0 -n1 node --check
@@ -83,11 +95,61 @@ jobs:
         run: npm test
       - name: Upload backend coverage report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: backend-coverage
           path: backend/coverage/
           if-no-files-found: ignore
-      - name: Dependency audit
-        if: always()
+      - name: Verify high and critical dependency vulnerabilities
         run: npm audit --audit-level=high
+      - name: Upload validated backend lockfile
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-lockfile
+          path: backend/package-lock.json
+          if-no-files-found: error
+
+  persist-lockfiles:
+    name: Commit tested dependency lockfile patches to main
+    needs: [frontend, backend]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Download validated frontend lockfile
+        uses: actions/download-artifact@v8
+        with:
+          name: frontend-lockfile
+          path: .ci-lockfiles/frontend
+      - name: Download validated backend lockfile
+        uses: actions/download-artifact@v8
+        with:
+          name: backend-lockfile
+          path: .ci-lockfiles/backend
+      - name: Persist lockfiles only if this run still matches main
+        shell: bash
+        env:
+          TRIGGER_SHA: ${{ github.sha }}
+        run: |
+          git fetch origin main
+          if [ "$(git rev-parse origin/main)" != "$TRIGGER_SHA" ]; then
+            echo "main moved while CI ran; skipping the lockfile commit to avoid overwriting newer changes."
+            exit 0
+          fi
+
+          cp .ci-lockfiles/frontend/package-lock.json Frontend/package-lock.json
+          cp .ci-lockfiles/backend/package-lock.json backend/package-lock.json
+
+          if git diff --quiet -- Frontend/package-lock.json backend/package-lock.json; then
+            echo "Dependency lockfiles are already up to date."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Frontend/package-lock.json backend/package-lock.json
+          git commit -m "chore: apply tested dependency security patches"
+          git push origin HEAD:main
