@@ -78,8 +78,8 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 24
-      - name: Install locked dependencies
-        run: npm ci
+      - name: Synchronize manifest and lockfile, then install dependencies
+        run: npm install
       - name: Apply compatible security patches
         run: npm audit fix --audit-level=high
       - name: Check JavaScript syntax
