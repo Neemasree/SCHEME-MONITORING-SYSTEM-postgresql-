@@ -4,7 +4,7 @@
 
 CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
 
-> **Status:** Development project. GitHub Actions runs frontend lint/build and PostgreSQL-backed API integration tests. The observed test run passed, but the full pipeline remains red until dependency-audit findings are resolved. Docker Compose is available for local evaluation. No hosted production URL is claimed because deployment has not been verified.
+> **Status:** Portfolio project under hardening; not yet production-ready. The latest inspected GitHub Actions run passed frontend lint/build, backend syntax/lint, database migration, seeding, and PostgreSQL-backed API integration tests. Both CI jobs still fail at `npm audit --audit-level=high`, so dependency remediation and a green full pipeline remain outstanding. Docker Compose and hosted-deployment templates are provided, but a live deployment has not been verified.
 
 ## What it does
 
@@ -23,7 +23,7 @@ CivicTrack is a student full-stack project for managing public-benefit schemes a
 - **Backend:** Node.js, Express, Helmet, Zod, Swagger UI
 - **Database/ORM:** PostgreSQL, Sequelize
 - **Authentication:** JWT, bcryptjs
-- **Automation:** GitHub Actions, ESLint, Prettier, Husky/lint-staged, Dependabot
+- **Automation:** GitHub Actions, ESLint, Prettier, Husky/lint-staged
 - **Local containers:** Docker, Docker Compose, Nginx
 
 ## Architecture
@@ -155,7 +155,7 @@ npm run seed
 npm run dev
 ```
 
-The migration runner tracks applied SQL migrations in `SequelizeMeta` and does not intentionally drop existing tables. The current migration runner also uses non-destructive Sequelize sync to bootstrap missing tables; review schema changes carefully before applying them to production.
+The migration runner tracks applied SQL migrations in `SequelizeMeta` and does not intentionally drop existing tables. **Production migration warning:** the current migration runner calls `sequelize.sync()` before applying SQL migrations. Although it does not use `force` or `alter`, this is still model-driven schema creation and should be replaced with an explicit baseline migration plus versioned SQL migrations before production use. Do not run this bootstrap flow against an important production database without reviewing and backing up the schema.
 
 The API listens on `http://localhost:5000` by default. Health check: `GET /health`.
 
@@ -205,7 +205,7 @@ Stop the stack with `docker compose down`; retain the local database volume. To 
 
 ## Hosted deployment setup (not yet live)
 
-The repository now includes a Render blueprint (`render.yaml`) and Vercel SPA routing configuration (`Frontend/vercel.json`). These are deployment templates, not proof of a live deployment.
+The repository includes a Render blueprint (`render.yaml`) and Vercel SPA routing configuration (`Frontend/vercel.json`). These are deployment templates only; no live URL or successful hosted end-to-end test is currently verified.
 
 1. **Neon:** create a PostgreSQL database and copy its database name, username, password, and host.
 2. **Render:** create a Blueprint deployment from this repository. Set `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `DB_HOST` from Neon. Keep `DB_PORT=5432`; production mode requires verified PostgreSQL SSL. Set `CLIENT_ORIGIN` to the exact deployed Vercel origin.
