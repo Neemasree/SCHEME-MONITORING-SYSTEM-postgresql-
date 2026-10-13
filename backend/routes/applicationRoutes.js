@@ -125,29 +125,36 @@ router.post('/', allowRoles('beneficiary'), validate(applicationSchema), async (
       return res.status(400).json({ message: 'This scheme does not have a district configured' });
     }
 
-    const application = await Application.create({
-      beneficiaryUserId: req.user.id,
-      beneficiary: req.user.name,
-      scheme: scheme.schemeName,
-      district: scheme.district,
-      status: 'Pending Field Officer',
-      dateApplied: new Date().toISOString().slice(0, 10),
-      remarks: [],
-    });
+    const transaction = await Application.sequelize.transaction();
+    try {
+      const application = await Application.create({
+        beneficiaryUserId: req.user.id,
+        beneficiary: req.user.name,
+        scheme: scheme.schemeName,
+        district: scheme.district,
+        status: 'Pending Field Officer',
+        dateApplied: new Date().toISOString().slice(0, 10),
+        remarks: [],
+      }, { transaction });
 
-    await AuditLog.create({
-      entityType: 'application',
-      entityId: application.id,
-      action: 'application_submitted',
-      actorId: req.user.id,
-      actorRole: req.user.role,
-      previousStatus: null,
-      newStatus: application.status,
-      remark: null,
-    });
-    await notifyWorkflowRecipients(application, application.status);
+      await AuditLog.create({
+        entityType: 'application',
+        entityId: application.id,
+        action: 'application_submitted',
+        actorId: req.user.id,
+        actorRole: req.user.role,
+        previousStatus: null,
+        newStatus: application.status,
+        remark: null,
+      }, { transaction });
+      await notifyWorkflowRecipients(application, application.status, transaction);
 
-    return res.status(201).json({ message: 'Application submitted successfully', application });
+      await transaction.commit();
+      return res.status(201).json({ message: 'Application submitted successfully', application });
+    } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
+      throw error;
+    }
   } catch (error) {
     console.error('Create application failed:', error);
     return res.status(500).json({ message: 'Unable to submit application' });
