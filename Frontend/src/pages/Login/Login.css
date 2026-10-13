@@ -216,4 +216,78 @@
         opacity: 1;
         transform: translateX(0);
     }
-}
+}
+
+@media (max-width: 640px) {
+    .login-container {
+        align-items: flex-start;
+        padding: 20px 14px;
+        min-height: 100vh;
+        min-height: 100dvh;
+    }
+
+    .login-card {
+        margin: auto 0;
+        padding: clamp(22px, 6vw, 32px);
+        border-radius: 16px;
+        max-width: 480px;
+    }
+
+    .login-header {
+        margin-bottom: 24px;
+    }
+
+    .login-header h2 {
+        font-size: clamp(23px, 6vw, 28px);
+    }
+
+    .login-header p {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .login-form {
+        gap: 18px;
+    }
+
+    .role-card {
+        padding: 14px;
+    }
+
+    .role-icon {
+        margin-right: 12px;
+    }
+
+    .selected-indicator {
+        right: 14px;
+    }
+
+    .login-btn {
+        min-height: 48px;
+    }
+}
+
+:root[data-theme='dark'] .login-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+}
+
+:root[data-theme='dark'] .role-card,
+:root[data-theme='dark'] .form-group input {
+    background: var(--bg-main);
+    color: var(--text-dark);
+}
+
+:root[data-theme='dark'] .role-card.selected {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+:root[data-theme='dark'] .login-error-alert {
+    color: #fca5a5;
+}
+
+:root[data-theme='dark'] .login-success-alert {
+    color: #6ee7b7;
+}
+
