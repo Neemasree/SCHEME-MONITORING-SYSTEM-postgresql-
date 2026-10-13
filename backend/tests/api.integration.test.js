@@ -3,6 +3,8 @@ const jwt = require('jsonwebtoken');
 const app = require('../index');
 const { env } = require('../config/env');
 const { sequelize } = require('../config/db');
+const Application = require('../models/Application');
+const AuditLog = require('../models/AuditLog');
 require('../models');
 
 describe('CivicTrack API integration', () => {
@@ -85,6 +87,36 @@ describe('CivicTrack API integration', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  test('rolls back an application when writing its audit event fails', async () => {
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Rollback Beneficiary',
+        email: `rollback.${Date.now()}@example.com`,
+        password: 'StrongPass123',
+      });
+    expect(registration.status).toBe(201);
+
+    const auditCreate = jest
+      .spyOn(AuditLog, 'create')
+      .mockRejectedValueOnce(new Error('Simulated audit persistence failure'));
+
+    let response;
+    try {
+      response = await request(app)
+        .post('/api/applications')
+        .set('Authorization', `Bearer ${registration.body.token}`)
+        .send({ schemeId: 1 });
+    } finally {
+      auditCreate.mockRestore();
+    }
+
+    expect(response.status).toBe(500);
+    expect(
+      await Application.count({ where: { beneficiaryUserId: registration.body.id } }),
+    ).toBe(0);
   });
 
   test('requires a remark when rejecting an application', async () => {
