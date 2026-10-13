@@ -177,3 +177,191 @@ button {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* Responsive design tokens and shared component defaults */
+:root {
+  color-scheme: light;
+  --font-body: 'Inter', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+  --content-max-width: 1440px;
+  --space-page: clamp(16px, 2.5vw, 32px);
+  --focus-ring: 0 0 0 3px rgba(59, 130, 246, 0.24);
+  --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+html {
+  min-width: 320px;
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  font-family: var(--font-body);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:not(:disabled),
+[role='button'],
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+:where(input, select, textarea) {
+  max-width: 100%;
+}
+
+:where(input, select, textarea):focus-visible {
+  outline: 2px solid var(--primary-light);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring);
+}
+
+:where(table) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+:where(img, svg, video, canvas) {
+  max-width: 100%;
+}
+
+.page-content > * {
+  min-width: 0;
+}
+
+@media (min-width: 1600px) {
+  .page-content {
+    padding-inline: max(var(--space-page), calc((100vw - var(--sidebar-width) - var(--content-max-width)) / 2));
+  }
+}
+
+@media (max-width: 900px) {
+  :root {
+    --sidebar-width: 220px;
+    --navbar-height: 64px;
+  }
+
+  .page-content {
+    padding: 22px;
+  }
+
+  .navbar {
+    padding-inline: 20px;
+  }
+
+  .search-bar {
+    width: min(34vw, 300px);
+  }
+
+  .search-bar:focus-within {
+    width: min(42vw, 340px);
+  }
+}
+
+@media (max-width: 640px) {
+  .app-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    height: auto;
+    overflow: visible;
+  }
+
+  .main-content {
+    min-width: 0;
+    height: 100vh;
+    height: 100dvh;
+  }
+
+  .page-content {
+    padding: 18px 14px 96px;
+    overflow-x: hidden;
+  }
+
+  .page-header {
+    margin-bottom: 18px;
+  }
+
+  .page-title {
+    font-size: clamp(21px, 6vw, 26px);
+    line-height: 1.2;
+  }
+
+  .page-subtitle {
+    max-width: 65ch;
+    line-height: 1.6;
+  }
+
+  .glass-card {
+    border-radius: 12px;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --text-muted: #475569;
+    --border-color: #cbd5e1;
+  }
+}
+
+/* Components can opt into dark mode by setting data-theme="dark" on the root. */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg-main: #0b1220;
+  --bg-card: #111c2e;
+  --bg-sidebar: #0f1929;
+  --text-dark: #e5edf8;
+  --text-muted: #a6b4c8;
+  --text-light: #f8fafc;
+  --border-color: rgba(148, 163, 184, 0.2);
+  --glass-bg: rgba(15, 25, 41, 0.94);
+  --glass-border: 1px solid rgba(148, 163, 184, 0.16);
+  --shadow-card: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+:root[data-theme='dark'] body {
+  background-image:
+    radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.06) 0%, transparent 50%);
+}
+
+:root[data-theme='dark'] .search-bar,
+:root[data-theme='dark'] .login-card,
+:root[data-theme='dark'] .role-card,
+:root[data-theme='dark'] .notifications-dropdown,
+:root[data-theme='dark'] .notif-icon-circle {
+  background: var(--bg-card);
+  color: var(--text-dark);
+}
+
+:root[data-theme='dark'] .search-bar input,
+:root[data-theme='dark'] .form-group input {
+  color: var(--text-dark);
+  background-color: transparent;
+}
+
