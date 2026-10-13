@@ -1,6 +1,7 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../index');
+const { env } = require('../config/env');
 const { sequelize } = require('../config/db');
 require('../models');
 
@@ -57,7 +58,7 @@ describe('CivicTrack API integration', () => {
   test('rejects expired access tokens', async () => {
     const expiredToken = jwt.sign(
       { id: 1, exp: Math.floor(Date.now() / 1000) - 60 },
-      process.env.JWT_SECRET,
+      env.JWT_SECRET,
     );
     const response = await request(app)
       .get('/api/applications')
