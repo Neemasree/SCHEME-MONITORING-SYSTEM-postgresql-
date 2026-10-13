@@ -5,6 +5,7 @@ const { env } = require('../config/env');
 const { sequelize } = require('../config/db');
 const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
+const Notification = require('../models/Notification');
 require('../models');
 
 describe('CivicTrack API integration', () => {
@@ -89,7 +90,7 @@ describe('CivicTrack API integration', () => {
     expect(response.body.code).toBe('VALIDATION_ERROR');
   });
 
-  test('rolls back an application when writing its audit event fails', async () => {
+  test('rolls back the application and audit event when submission notifications fail', async () => {
     const registration = await request(app)
       .post('/api/auth/register')
       .send({
@@ -99,9 +100,9 @@ describe('CivicTrack API integration', () => {
       });
     expect(registration.status).toBe(201);
 
-    const auditCreate = jest
-      .spyOn(AuditLog, 'create')
-      .mockRejectedValueOnce(new Error('Simulated audit persistence failure'));
+    const notificationCreate = jest
+      .spyOn(Notification, 'bulkCreate')
+      .mockRejectedValueOnce(new Error('Simulated notification persistence failure'));
 
     let response;
     try {
@@ -110,12 +111,20 @@ describe('CivicTrack API integration', () => {
         .set('Authorization', `Bearer ${registration.body.token}`)
         .send({ schemeId: 1 });
     } finally {
-      auditCreate.mockRestore();
+      notificationCreate.mockRestore();
     }
 
     expect(response.status).toBe(500);
     expect(
       await Application.count({ where: { beneficiaryUserId: registration.body.id } }),
+    ).toBe(0);
+    expect(
+      await AuditLog.count({
+        where: {
+          actorId: registration.body.id,
+          action: 'application_submitted',
+        },
+      }),
     ).toBe(0);
   });
 
