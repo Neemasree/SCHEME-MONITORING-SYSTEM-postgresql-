@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { env } = require('../config/env');
 
 const authenticate = async (req, res, next) => {
   const header = req.headers.authorization || '';
@@ -9,13 +10,8 @@ const authenticate = async (req, res, next) => {
     return res.status(401).json({ message: 'Authentication required' });
   }
 
-  if (!process.env.JWT_SECRET) {
-    console.error('JWT_SECRET is not configured');
-    return res.status(503).json({ message: 'Authentication is not configured' });
-  }
-
   try {
-    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    const payload = jwt.verify(token, env.JWT_SECRET);
     const user = await User.findByPk(payload.id, {
       attributes: ['id', 'name', 'email', 'role', 'isActive'],
     });
