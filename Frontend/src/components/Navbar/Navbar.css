@@ -147,8 +147,14 @@
     font-weight: 500;
 }
 
-.mark-read-btn:hover {
+.mark-read-btn:hover:not(:disabled) {
     text-decoration: underline;
+}
+
+.mark-read-btn:disabled {
+    color: var(--text-muted);
+    cursor: not-allowed;
+    opacity: 0.65;
 }
 
 .notif-list {
@@ -159,12 +165,25 @@
 .notif-item {
     display: flex;
     align-items: flex-start;
+    width: 100%;
     padding: 16px;
     gap: 12px;
+    border: 0;
     border-bottom: 1px solid var(--border-color);
+    border-radius: 0;
+    text-align: left;
+    font: inherit;
+    color: var(--text-dark);
+    background: transparent;
     transition: background-color 0.2s;
     position: relative;
     cursor: pointer;
+}
+
+.notif-item:focus-visible {
+    outline: 2px solid var(--primary-light);
+    outline-offset: -3px;
+    z-index: 1;
 }
 
 .notif-item:hover {
