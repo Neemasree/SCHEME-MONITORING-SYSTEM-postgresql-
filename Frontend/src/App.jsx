@@ -156,6 +156,7 @@ const App = () => {
             <PortalLayout user={user} logout={logout} onSearchItem={setGlobalSearch}>
               <Routes>
                 <Route path="applications" element={<BeneficiaryApplications username={user?.name} />} />
+                <Route path="notifications" element={<Notifications />} />
                 <Route path="*" element={<Navigate to="applications" replace />} />
               </Routes>
             </PortalLayout>
