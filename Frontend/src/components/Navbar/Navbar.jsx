@@ -48,6 +48,31 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
         }
     };
 
+    const handleMarkAllRead = async () => {
+        const unreadNotifications = notifications.filter((notification) => !notification.isRead);
+        if (unreadNotifications.length === 0) return;
+
+        try {
+            await Promise.all(
+                unreadNotifications.map((notification) =>
+                    api.put(`/notifications/${notification._id}/read`)
+                )
+            );
+            setNotifications((current) =>
+                current.map((notification) => ({ ...notification, isRead: true }))
+            );
+        } catch (error) {
+            console.error('Error marking all notifications as read:', error);
+            // Some requests may have succeeded; refresh from the server to keep the UI truthful.
+            try {
+                const { data } = await api.get('/notifications');
+                setNotifications(data);
+            } catch (refreshError) {
+                console.error('Error refreshing notifications:', refreshError);
+            }
+        }
+    };
+
     const handleSearchChange = (e) => {
         const value = e.target.value;
         setSearchTerm(value);
@@ -116,14 +141,23 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
                         <div className="notifications-dropdown glass-card animate-fade-in">
                             <div className="notif-header">
                                 <h4>Notifications</h4>
-                                <button className="mark-read-btn">Mark all as read</button>
+                                <button
+                                    type="button"
+                                    className="mark-read-btn"
+                                    onClick={handleMarkAllRead}
+                                    disabled={unreadCount === 0}
+                                >
+                                    Mark all as read
+                                </button>
                             </div>
                             <div className="notif-list">
                                 {notifications.length > 0 ? notifications.map(notif => (
-                                    <div
+                                    <button
+                                        type="button"
                                         key={notif._id}
                                         className={`notif-item ${!notif.isRead ? 'unread' : ''}`}
                                         onClick={() => handleMarkRead(notif._id)}
+                                        aria-label={`${notif.isRead ? 'Read' : 'Mark as read'} notification: ${notif.title}`}
                                     >
                                         <div className="notif-icon-circle">{getIcon(notif.type)}</div>
                                         <div className="notif-content">
@@ -131,8 +165,8 @@ const Navbar = ({ role, username = 'Official User', onSearchItem }) => {
                                             <p className="notif-desc">{notif.message}</p>
                                             <span className="notif-time">{new Date(notif.createdAt).toLocaleTimeString()}</span>
                                         </div>
-                                        {!notif.isRead && <div className="unread-dot"></div>}
-                                    </div>
+                                        {!notif.isRead && <div className="unread-dot" aria-hidden="true"></div>}
+                                    </button>
                                 )) : (
                                     <div className="notif-empty">No new notifications</div>
                                 )}
