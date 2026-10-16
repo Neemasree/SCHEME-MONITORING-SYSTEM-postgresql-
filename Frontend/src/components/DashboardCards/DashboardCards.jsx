@@ -1,5 +1,5 @@
 import { SkeletonCard } from '../Loading/Skeletons';
-import { Users, FileText, CheckCircle, Clock } from 'lucide-react';
+import { Users, FileText, CheckCircle, Clock, XCircle } from 'lucide-react';
 import './DashboardCards.css';
 
 const StatCard = ({ title, value, icon, colorClass, delay = 0 }) => (
@@ -22,7 +22,7 @@ const DashboardCards = ({ role, isLoading, stats }) => {
 
     if (isLoading || !stats) {
         return (
-            <div className="dashboard-cards-grid">
+            <div className="dashboard-cards-grid" aria-label="Loading dashboard statistics" aria-busy="true">
                 <SkeletonCard />
                 <SkeletonCard />
                 <SkeletonCard />
@@ -31,27 +31,34 @@ const DashboardCards = ({ role, isLoading, stats }) => {
         );
     }
 
-    const { totalSchemes, totalApplications, pendingApprovals, approvedCases } = stats;
+    // Keep the card values aligned with the fields returned by GET /dashboard/stats.
+    const {
+        totalSchemes = 0,
+        totalApplications = 0,
+        pendingApplications = 0,
+        approvedApplications = 0,
+        rejectedApplications = 0,
+    } = stats;
 
     const adminCards = [
-        { title: "Total Schemes", value: totalSchemes, icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
-        { title: "Total Beneficiaries", value: totalApplications, icon: <Users size={iconSize} />, colorClass: "green-card", delay: 0.1 },
-        { title: "Pending Approvals", value: pendingApprovals, icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
-        { title: "Completed Cases", value: approvedCases, icon: <CheckCircle size={iconSize} />, colorClass: "purple-card", delay: 0.3 }
+        { title: "Total Schemes", value: totalSchemes, icon: <FileText size={iconSize} aria-hidden="true" />, colorClass: "blue-card", delay: 0 },
+        { title: "Total Applications", value: totalApplications, icon: <Users size={iconSize} aria-hidden="true" />, colorClass: "green-card", delay: 0.1 },
+        { title: "Pending Approvals", value: pendingApplications, icon: <Clock size={iconSize} aria-hidden="true" />, colorClass: "amber-card", delay: 0.2 },
+        { title: "Approved Applications", value: approvedApplications, icon: <CheckCircle size={iconSize} aria-hidden="true" />, colorClass: "purple-card", delay: 0.3 }
     ];
 
     const districtCards = [
-        { title: "Active Schemes", value: totalSchemes, icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
-        { title: "Applications", value: totalApplications, icon: <Users size={iconSize} />, colorClass: "green-card", delay: 0.1 },
-        { title: "To Review", value: pendingApprovals, icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
-        { title: "Approved Cases", value: approvedCases, icon: <CheckCircle size={iconSize} />, colorClass: "purple-card", delay: 0.3 }
+        { title: "Active Schemes", value: totalSchemes, icon: <FileText size={iconSize} aria-hidden="true" />, colorClass: "blue-card", delay: 0 },
+        { title: "Applications", value: totalApplications, icon: <Users size={iconSize} aria-hidden="true" />, colorClass: "green-card", delay: 0.1 },
+        { title: "To Review", value: pendingApplications, icon: <Clock size={iconSize} aria-hidden="true" />, colorClass: "amber-card", delay: 0.2 },
+        { title: "Approved Cases", value: approvedApplications, icon: <CheckCircle size={iconSize} aria-hidden="true" />, colorClass: "purple-card", delay: 0.3 }
     ];
 
     const fieldCards = [
-        { title: "Assigned Cases", value: totalApplications, icon: <FileText size={iconSize} />, colorClass: "blue-card", delay: 0 },
-        { title: "Total Approved", value: approvedCases, icon: <CheckCircle size={iconSize} />, colorClass: "green-card", delay: 0.1 },
-        { title: "To Verify", value: pendingApprovals, icon: <Clock size={iconSize} />, colorClass: "amber-card", delay: 0.2 },
-        { title: "Rejections", value: "0", icon: <Users size={iconSize} />, colorClass: "red-card", delay: 0.3 }
+        { title: "Applications", value: totalApplications, icon: <FileText size={iconSize} aria-hidden="true" />, colorClass: "blue-card", delay: 0 },
+        { title: "Total Approved", value: approvedApplications, icon: <CheckCircle size={iconSize} aria-hidden="true" />, colorClass: "green-card", delay: 0.1 },
+        { title: "To Verify", value: pendingApplications, icon: <Clock size={iconSize} aria-hidden="true" />, colorClass: "amber-card", delay: 0.2 },
+        { title: "Rejections", value: rejectedApplications, icon: <XCircle size={iconSize} aria-hidden="true" />, colorClass: "red-card", delay: 0.3 }
     ];
 
     let cardsToDisplay = adminCards;
@@ -60,8 +67,8 @@ const DashboardCards = ({ role, isLoading, stats }) => {
 
     return (
         <div className="dashboard-cards-grid">
-            {cardsToDisplay.map((card, index) => (
-                <StatCard key={index} {...card} />
+            {cardsToDisplay.map((card) => (
+                <StatCard key={card.title} {...card} />
             ))}
         </div>
     );
