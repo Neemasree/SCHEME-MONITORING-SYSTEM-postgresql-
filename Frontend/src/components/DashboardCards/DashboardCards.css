@@ -1,6 +1,6 @@
 .dashboard-cards-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 24px;
     margin-bottom: 32px;
 }
@@ -114,4 +114,41 @@
     border-radius: 50%;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.4), transparent);
     z-index: 1;
+}
+
+@media (max-width: 1100px) {
+    .dashboard-cards-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .dashboard-cards-grid {
+        gap: 12px;
+    }
+
+    .stat-card {
+        gap: 10px;
+        padding: 14px 12px;
+    }
+
+    .stat-title {
+        font-size: 12px;
+        overflow-wrap: anywhere;
+    }
+
+    .stat-value {
+        font-size: 23px;
+    }
+
+    .stat-icon-wrapper {
+        width: 36px;
+        height: 36px;
+    }
+}
+
+@media (max-width: 350px) {
+    .dashboard-cards-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
