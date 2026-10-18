@@ -17,13 +17,41 @@ const Dashboard = ({ role, username }) => {
             setIsLoading(true);
             setError('');
             try {
-                const [statsRes, analyticsRes] = await Promise.all([
+                const [statsResult, analyticsResult] = await Promise.allSettled([
                     api.get('/dashboard/stats'),
                     api.get('/dashboard/analytics')
                 ]);
+                const errors = [];
 
-                setStats(statsRes.data);
-                setAnalytics(analyticsRes.data);
+                if (statsResult.status === 'fulfilled') {
+                    setStats(statsResult.value.data);
+                } else {
+                    console.error('Error fetching dashboard statistics:', statsResult.reason);
+                    setStats(null);
+                    errors.push(
+                        statsResult.reason?.response?.data?.message ||
+                        'Unable to load dashboard statistics.'
+                    );
+                }
+
+                if (analyticsResult.status === 'fulfilled') {
+                    const data = analyticsResult.value.data || {};
+                    setAnalytics({
+                        statusData: Array.isArray(data.statusData) ? data.statusData : [],
+                        schemeData: Array.isArray(data.schemeData) ? data.schemeData : [],
+                        districtStats: Array.isArray(data.districtStats) ? data.districtStats : [],
+                        trendData: Array.isArray(data.trendData) ? data.trendData : []
+                    });
+                } else {
+                    console.error('Error fetching dashboard analytics:', analyticsResult.reason);
+                    setAnalytics({ statusData: [], schemeData: [], districtStats: [], trendData: [] });
+                    errors.push(
+                        analyticsResult.reason?.response?.data?.message ||
+                        'Unable to load dashboard analytics.'
+                    );
+                }
+
+                setError(errors.join(' '));
             } catch (requestError) {
                 console.error("Error fetching dashboard data:", requestError);
                 setError(requestError.response?.data?.message || 'Unable to load dashboard data. Please try again.');
