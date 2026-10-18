@@ -20,7 +20,7 @@ const StatCard = ({ title, value, icon, colorClass, delay = 0 }) => (
 const DashboardCards = ({ role, isLoading, stats }) => {
     const iconSize = 24;
 
-    if (isLoading || !stats) {
+    if (isLoading) {
         return (
             <div className="dashboard-cards-grid" aria-label="Loading dashboard statistics" aria-busy="true">
                 <SkeletonCard />
@@ -28,6 +28,14 @@ const DashboardCards = ({ role, isLoading, stats }) => {
                 <SkeletonCard />
                 <SkeletonCard />
             </div>
+        );
+    }
+
+    if (!stats) {
+        return (
+            <p className="dashboard-cards-empty" role="status">
+                Dashboard statistics are unavailable. Use “Try again” to reload the data.
+            </p>
         );
     }
 
