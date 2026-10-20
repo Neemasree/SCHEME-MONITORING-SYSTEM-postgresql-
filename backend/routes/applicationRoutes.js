@@ -221,23 +221,33 @@ router.put(
       return res.status(400).json({ message: 'A reason is required when rejecting an application' });
     }
 
-    if (['district_officer', 'field_officer'].includes(req.user.role)) {
-      const user = await User.findByPk(req.user.id, { attributes: ['district'] });
-      if (!user?.district) {
-        return res.status(403).json({ message: 'No district is assigned to this account' });
-      }
-      const visibleApplication = await Application.findOne({ where: { id, district: user.district } });
-      if (!visibleApplication) {
-        return res.status(404).json({ message: 'Application not found' });
-      }
-    }
-
     const transaction = await Application.sequelize.transaction();
     try {
-      const application = await Application.findByPk(id, {
-        transaction,
-        lock: transaction.LOCK.UPDATE,
-      });
+      let application;
+      if (['district_officer', 'field_officer'].includes(req.user.role)) {
+        // Resolve and lock the reviewer's district in the same transaction as
+        // the application update, then scope the locked application query to it.
+        const reviewer = await User.findByPk(req.user.id, {
+          attributes: ['id', 'district'],
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
+        if (!reviewer?.district) {
+          await transaction.rollback();
+          return res.status(403).json({ message: 'No district is assigned to this account' });
+        }
+
+        application = await Application.findOne({
+          where: { id, district: reviewer.district },
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
+      } else {
+        application = await Application.findByPk(id, {
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
+      }
       if (!application) {
         await transaction.rollback();
         return res.status(404).json({ message: 'Application not found' });
