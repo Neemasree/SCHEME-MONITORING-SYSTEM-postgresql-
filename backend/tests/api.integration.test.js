@@ -148,6 +148,28 @@ describe('CivicTrack API integration', () => {
     expect(response.body.data.every((application) => application.district === 'Salem')).toBe(true);
   });
 
+  test('prevents a district officer from approving an application outside their district', async () => {
+    const applicationBefore = await Application.findByPk(102);
+    expect(applicationBefore.district).toBe('Coimbatore');
+    expect(applicationBefore.status).toBe('Pending District Officer');
+    const auditCountBefore = await AuditLog.count({
+      where: { entityType: 'application', entityId: 102 },
+    });
+
+    const response = await request(app)
+      .put('/api/applications/102/approve')
+      .set('Authorization', `Bearer ${districtToken}`)
+      .send({ action: 'approve', remark: 'Cross-district access must be denied' });
+
+    expect(response.status).toBe(404);
+
+    const applicationAfter = await Application.findByPk(102);
+    expect(applicationAfter.status).toBe('Pending District Officer');
+    expect(await AuditLog.count({
+      where: { entityType: 'application', entityId: 102 },
+    })).toBe(auditCountBefore);
+  });
+
   test('accepts valid dashboard date filters', async () => {
     const response = await request(app)
       .get('/api/dashboard/analytics?startDate=2026-10-01&endDate=2026-10-31')
