@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${DB_PASSWORD:-local_dev_password}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - civictrack_pgdata:/var/lib/postgresql/data
     healthcheck:

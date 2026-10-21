@@ -109,9 +109,20 @@ jobs:
           path: backend/package-lock.json
           if-no-files-found: error
 
+  container-build:
+    name: Docker Compose configuration and image build
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+      - name: Validate Docker Compose configuration
+        run: docker compose config --quiet
+      - name: Build backend and frontend images
+        run: docker compose build
+
   persist-lockfiles:
     name: Commit tested dependency lockfile patches to main
-    needs: [frontend, backend]
+    needs: [frontend, backend, container-build]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
