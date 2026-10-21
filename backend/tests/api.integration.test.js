@@ -179,6 +179,24 @@ describe('CivicTrack API integration', () => {
     expect(response.body).toHaveProperty('trendData');
   });
 
+  test('rejects impossible calendar dates in dashboard filters', async () => {
+    const response = await request(app)
+      .get('/api/dashboard/analytics?startDate=2026-02-30')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('startDate must use YYYY-MM-DD format');
+  });
+
+  test('rejects dashboard date ranges where the start date follows the end date', async () => {
+    const response = await request(app)
+      .get('/api/dashboard/analytics?startDate=2026-10-31&endDate=2026-10-01')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('startDate must be on or before endDate');
+  });
+
   test('enforces every stage of the application approval workflow and records history', async () => {
     const submitted = await request(app)
       .post('/api/applications')
