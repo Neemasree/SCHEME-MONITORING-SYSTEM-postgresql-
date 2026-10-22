@@ -197,6 +197,52 @@ describe('CivicTrack API integration', () => {
     expect(response.body.message).toBe('startDate must be on or before endDate');
   });
 
+  test('rolls back an approval when audit-log persistence fails', async () => {
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Approval Rollback Beneficiary',
+        email: `approval.rollback.${Date.now()}@example.com`,
+        password: 'StrongPass123',
+      });
+    expect(registration.status).toBe(201);
+
+    const submitted = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${registration.body.token}`)
+      .send({ schemeId: 1 });
+    expect(submitted.status).toBe(201);
+
+    const applicationId = submitted.body.application.id;
+    const statusBefore = submitted.body.application.status;
+    const remarksBefore = submitted.body.application.remarks;
+    const auditCountBefore = await AuditLog.count({
+      where: { entityType: 'application', entityId: applicationId },
+    });
+
+    const auditCreate = jest
+      .spyOn(AuditLog, 'create')
+      .mockRejectedValueOnce(new Error('Simulated audit-log persistence failure'));
+
+    let response;
+    try {
+      response = await request(app)
+        .put(`/api/applications/${applicationId}/approve`)
+        .set('Authorization', `Bearer ${fieldToken}`)
+        .send({ action: 'approve', remark: 'Verify transactional rollback' });
+    } finally {
+      auditCreate.mockRestore();
+    }
+
+    expect(response.status).toBe(500);
+    const applicationAfter = await Application.findByPk(applicationId);
+    expect(applicationAfter.status).toBe(statusBefore);
+    expect(applicationAfter.remarks).toEqual(remarksBefore);
+    expect(await AuditLog.count({
+      where: { entityType: 'application', entityId: applicationId },
+    })).toBe(auditCountBefore);
+  });
+
   test('enforces every stage of the application approval workflow and records history', async () => {
     const submitted = await request(app)
       .post('/api/applications')
