@@ -298,7 +298,7 @@ describe('CivicTrack API integration', () => {
     expect(notifications.status).toBe(200);
     expect(notifications.body.some((notification) => notification.title === 'Application approved')).toBe(true);
   });
-  
+
   test('rolls back an approval when notification persistence fails', async () => {
     const registration = await request(app)
       .post('/api/auth/register')
@@ -344,5 +344,4 @@ describe('CivicTrack API integration', () => {
       where: { entityType: 'application', entityId: applicationId },
     })).toBe(auditCountBefore);
   });
-
 });
