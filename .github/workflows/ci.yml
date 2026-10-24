@@ -111,10 +111,25 @@ jobs:
 
   container-build:
     name: Docker Compose configuration and image build
+    needs: [frontend, backend]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+      - name: Download validated frontend lockfile
+        uses: actions/download-artifact@v8
+        with:
+          name: frontend-lockfile
+          path: .ci-lockfiles/frontend
+      - name: Download validated backend lockfile
+        uses: actions/download-artifact@v8
+        with:
+          name: backend-lockfile
+          path: .ci-lockfiles/backend
+      - name: Use lockfiles validated by lint, audit, and integration jobs
+        run: |
+          cp .ci-lockfiles/frontend/package-lock.json Frontend/package-lock.json
+          cp .ci-lockfiles/backend/package-lock.json backend/package-lock.json
       - name: Validate Docker Compose configuration
         run: docker compose config --quiet
       - name: Build backend and frontend images
