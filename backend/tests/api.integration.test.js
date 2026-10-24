@@ -170,6 +170,24 @@ describe('CivicTrack API integration', () => {
     })).toBe(auditCountBefore);
   });
 
+  test("keeps every dashboard analytics series inside the field officer's district", async () => {
+    const fieldAnalytics = await request(app)
+      .get('/api/dashboard/analytics?district=Coimbatore')
+      .set('Authorization', `Bearer ${fieldToken}`);
+
+    const districtAdminAnalytics = await request(app)
+      .get('/api/dashboard/analytics?district=Salem')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(fieldAnalytics.status).toBe(200);
+    expect(districtAdminAnalytics.status).toBe(200);
+    expect(fieldAnalytics.body.districtStats.length).toBeGreaterThan(0);
+    expect(fieldAnalytics.body.districtStats.every((row) => row.district === 'Salem')).toBe(true);
+
+    // A field officer cannot override their account district via a query parameter.
+    expect(fieldAnalytics.body).toEqual(districtAdminAnalytics.body);
+  });
+
   test('accepts valid dashboard date filters', async () => {
     const response = await request(app)
       .get('/api/dashboard/analytics?startDate=2026-10-01&endDate=2026-10-31')
