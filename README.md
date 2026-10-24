@@ -4,7 +4,7 @@
 
 CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
 
-> **Status:** Portfolio project under hardening; not yet production-ready. CI now applies only compatible npm security updates (never `npm audit fix --force`), checks frontend lint/build and backend syntax/lint, migrations, seeding, PostgreSQL-backed API integration tests, and blocks high/critical dependency advisories. The latest inspected run passed these checks and committed the refreshed lockfiles directly to `main`; a fresh run is validating the resulting repository head. Docker Compose and hosted-deployment templates are provided, but a live deployment has not been verified.
+> **Status:** Portfolio project under hardening; not yet production-ready. CI checks frontend lint/build, backend syntax/lint, PostgreSQL migrations and disposable seeding, API integration tests, high/critical dependency advisories, and Docker image builds. Validated dependency lockfile updates are committed directly to `main` only after the CI jobs pass. The deployment files are templates; a live deployment has not been verified.
 
 ## What it does
 
@@ -238,16 +238,16 @@ All API routes below are under `/api`, except `/health`. Protected routes requir
 
 ## CI and verification
 
-GitHub Actions is configured to run:
-- ESLint and Vite production build for the frontend.
-- Backend JavaScript syntax checks and ESLint.
-- High-severity dependency audit gates for both npm projects.
-- Schema migration and development seeding against a PostgreSQL 16 service container.
-- Jest/Supertest API integration tests for authentication, district isolation, date filters, approval workflow, audit history, beneficiary notifications, invalid input, role denial, and expired tokens.
-- A backend coverage report uploaded as a workflow artifact.
-- Dependency audit checks. Current audit findings must be resolved before CI can be considered green.
+Check the [GitHub Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for the latest run. The workflow verifies:
 
-The PostgreSQL integration suite passed in [run 38149401592](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions/runs/38149401592): backend syntax, lint, migrations, seed, and API tests succeeded; frontend lint and build also succeeded. The overall run failed only at the dependency-audit gates because the current lockfiles still contain known advisories. Check the [latest Actions run](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for any newer result.
+- Frontend ESLint, production build, and high/critical dependency audit.
+- Backend JavaScript syntax, ESLint, and PostgreSQL-backed Jest/Supertest integration tests.
+- Migrations and seeding against a disposable PostgreSQL service in CI only.
+- High/critical backend dependency audit and an uploaded coverage report.
+- Docker Compose configuration and backend/frontend image builds using the lockfiles validated by the lint, audit, and integration jobs.
+- Lockfile persistence to `main` only after the required validation jobs pass and only if `main` has not moved since the run began.
+
+The integration suite covers authentication and invalid input, district-scoped access, dashboard date filters, multi-stage approval, audit history, notifications, and transaction rollback on simulated persistence failures. A green CI run verifies these automated checks; it does not prove a hosted deployment or production readiness.
 
 ## Evidence and deployment status
 
