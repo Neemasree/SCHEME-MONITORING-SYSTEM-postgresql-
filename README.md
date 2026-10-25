@@ -1,126 +1,118 @@
-# CivicTrack — Scheme Monitoring System
+<div align="center">
+
+# 🏛️ CivicTrack
+
+### Scheme Monitoring & Beneficiary Application Management
+
+A role-based platform for public-benefit scheme applications, district-scoped review, multi-stage approvals, notifications, and auditable decisions.
 
 [![CI](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions/workflows/ci.yml/badge.svg)](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions/workflows/ci.yml)
+[![React](https://img.shields.io/badge/React-18-20232A?style=flat-square&logo=react&logoColor=61DAFB)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-REST_API-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Database-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 
-CivicTrack is a student full-stack project for managing public-benefit schemes and reviewing beneficiary applications through a role-based, multi-stage approval workflow.
+</div>
 
-> **Status:** Portfolio project under hardening; not yet production-ready. CI checks frontend lint/build, backend syntax/lint, PostgreSQL migrations and disposable seeding, API integration tests, high/critical dependency advisories, and Docker image builds. Validated dependency lockfile updates are committed directly to `main` only after the CI jobs pass. The deployment files are templates; a live deployment has not been verified.
+---
 
-## What it does
+> **Project status:** Portfolio project under hardening — **not production-ready yet**. CI validates frontend lint/build, backend syntax/lint, PostgreSQL-backed integration tests, dependency advisories, Docker image builds, and a full-stack container smoke test. A live hosted deployment has not been verified.
 
-- JWT authentication and server-side role checks.
-- Beneficiary registration, application submission, status tracking, and review remarks.
-- Field Officer → District Officer → Admin review stages, with rejection reasons.
-- District-scoped application listings and analytics for officer roles.
-- Audit events and a timeline endpoint for application history.
-- Recipient-specific notifications when applications move through the workflow.
-- Admin user management: create accounts, assign officer districts, list accounts, and deactivate users.
-- PostgreSQL-backed dashboard analytics and paginated scheme listing.
+## ✨ What CivicTrack does
 
-## Stack
+<table>
+<tr>
+<td width="50%" valign="top">
 
-- **Frontend:** React, Vite, React Router, Axios, Recharts
-- **Backend:** Node.js, Express, Helmet, Zod, Swagger UI
-- **Database/ORM:** PostgreSQL, Sequelize
-- **Authentication:** JWT, bcryptjs
-- **Automation:** GitHub Actions, ESLint, Prettier, Husky/lint-staged
-- **Local containers:** Docker, Docker Compose, Nginx
+### 🧑‍💼 Application management
+- Beneficiary registration and sign-in
+- Scheme listing and application submission
+- Application status tracking and review remarks
+- Paginated scheme and application listings
 
-## Architecture
+</td>
+<td width="50%" valign="top">
 
-```text
-React + Vite
-    │ HTTPS / JSON + JWT
-    ▼
-Express REST API ── role and district authorization
-    │
-    ▼
-Sequelize ORM
-    │
-    ▼
-PostgreSQL
-```
+### 🪜 Multi-stage review
+- Field Officer review
+- District Officer review
+- Final Admin decision
+- Rejection reasons and application history
+- Transactional status and audit updates
 
-### Approval workflow
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
 
-```mermaid
-stateDiagram-v2
-    [*] --> PendingFieldOfficer: Beneficiary submits
-    PendingFieldOfficer --> PendingDistrictOfficer: Field officer approves
-    PendingFieldOfficer --> Rejected: Field officer rejects
-    PendingDistrictOfficer --> PendingAdmin: District officer approves
-    PendingDistrictOfficer --> Rejected: District officer rejects
-    PendingAdmin --> Approved: Admin approves
-    PendingAdmin --> Rejected: Admin rejects
-    Approved --> [*]
-    Rejected --> [*]
-```
+### 📊 Role-aware dashboards
+- PostgreSQL-backed dashboard statistics
+- Analytics with date filters
+- District-scoped officer views
+- District-level performance metrics
 
-### Data model (current logical relationships)
+</td>
+<td width="50%" valign="top">
 
-```mermaid
-erDiagram
-    USERS ||--o{ APPLICATIONS : submits
-    USERS ||--o{ NOTIFICATIONS : receives
-    USERS ||--o{ AUDIT_LOGS : performs
-    APPLICATIONS ||--o{ AUDIT_LOGS : records
-    USERS {
-      int id PK
-      string email
-      string role
-      string district
-      boolean isActive
-    }
-    APPLICATIONS {
-      int id PK
-      int beneficiaryUserId FK
-      string scheme
-      string district
-      string status
-      date dateApplied
-    }
-    NOTIFICATIONS {
-      int id PK
-      int userId FK
-      string role
-      string title
-      boolean isRead
-    }
-    AUDIT_LOGS {
-      bigint id PK
-      int entityId
-      int actorId
-      string action
-      string previousStatus
-      string newStatus
-    }
-```
+### 🔐 Security and accountability
+- JWT authentication and password hashing
+- Server-side role and district authorization
+- Audit timeline for application decisions
+- Recipient-specific notifications
+- Admin account creation, district assignment, and deactivation
 
-**Design decisions**
-- The API—not the browser—decides which roles may perform each approval transition.
-- District scope is derived from the authenticated user's account, not trusted from a request parameter.
-- Each approval/rejection is written to an audit log inside the same transaction as the status update.
-- Beneficiary accounts can be created publicly, but privileged accounts are provisioned by an administrator.
-- Seed data is for local demos only; do not use the demo password or seeded personal details in a public deployment.
+</td>
+</tr>
+</table>
 
-## Run locally
+## 🧰 Technology stack
+
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, React Router, Axios, Recharts |
+| API | Node.js, Express, Helmet, Zod, Swagger UI |
+| Database | PostgreSQL, Sequelize ORM, versioned SQL migrations |
+| Authentication | JWT, bcryptjs, server-side role checks |
+| Quality | ESLint, Prettier, Husky/lint-staged, Jest, Supertest |
+| Delivery | GitHub Actions, Docker, Docker Compose, Nginx |
+
+## 🏗️ Architecture
+
+CivicTrack separates the browser UI, REST API, authorization and workflow rules, and PostgreSQL persistence. The API is responsible for validating role permissions and district scope; the frontend is not treated as a security boundary.
+
+**Architecture diagrams:** [System architecture, approval lifecycle, logical data model, and Docker deployment](docs/architecture.md).
+
+The diagrams are maintained with the implementation. When a change affects API boundaries, permissions, workflow transitions, data relationships, or deployment topology, update the diagrams in the same change.
+
+### Key engineering decisions
+
+- **Server-side authorization:** the API determines which roles may perform each approval transition.
+- **District isolation:** an officer's scope comes from the authenticated account, not from a user-controlled query parameter.
+- **Transactional writes:** approval/rejection status changes and audit records are kept consistent when a transactional write fails; related notification writes are tested for rollback behavior.
+- **Auditable decisions:** application history records the actor, action, and previous/new status.
+- **Privileged account control:** beneficiaries can register publicly; officer/admin accounts are provisioned through the administrative flow.
+- **Safe demo data:** seed accounts and passwords are for local development only.
+
+## 🚀 Run locally
 
 ### Prerequisites
 
-- Node.js 22+
+- Node.js (use the version supported by the current lockfiles and CI)
 - PostgreSQL
 - Git
 
-### 1. Clone
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-.git
 cd SCHEME-MONITORING-SYSTEM-postgresql-
 ```
 
-### 2. Create a PostgreSQL database
+### 2. Create a local database
 
-For example, in `psql`:
+Create a development database in PostgreSQL:
 
 ```sql
 CREATE DATABASE govt_monitoring;
@@ -128,7 +120,7 @@ CREATE DATABASE govt_monitoring;
 
 ### 3. Configure the backend
 
-Create `backend/.env`:
+Create `backend/.env` with local values:
 
 ```env
 PORT=5000
@@ -143,9 +135,9 @@ SQL_LOGGING=false
 DB_POOL_MAX=10
 ```
 
-Never commit real credentials or production secrets.
+Never commit real credentials, tokens, or production secrets.
 
-### 4. Install and seed the backend
+### 4. Install and start the backend
 
 ```bash
 cd backend
@@ -155,13 +147,13 @@ npm run seed
 npm run dev
 ```
 
-The migration runner tracks applied SQL migrations in `SequelizeMeta` and does not intentionally drop existing tables. **Production migration warning:** the current migration runner calls `sequelize.sync()` before applying SQL migrations. Although it does not use `force` or `alter`, this is still model-driven schema creation and should be replaced with an explicit baseline migration plus versioned SQL migrations before production use. Do not run this bootstrap flow against an important production database without reviewing and backing up the schema.
+The API listens on `http://localhost:5000` by default. Health check: [http://localhost:5000/health](http://localhost:5000/health).
 
-The API listens on `http://localhost:5000` by default. Health check: `GET /health`.
+> **Migration caution:** the current migration runner calls `sequelize.sync()` before applying SQL migrations. It does not use `force` or `alter`, but model-driven schema creation is still a production risk. Replace this with a reviewed baseline migration and versioned migrations before production use. Do not run the bootstrap flow against an important production database without a verified backup and schema review.
 
 ### 5. Start the frontend
 
-In a second terminal:
+Open a second terminal from the repository root:
 
 ```bash
 cd Frontend
@@ -169,11 +161,11 @@ npm install
 npm run dev
 ```
 
-Vite normally serves the UI at `http://localhost:5173`. Set `VITE_API_URL` if the API is hosted elsewhere; its default is `http://localhost:5000/api`.
+Vite normally serves the UI at [http://localhost:5173](http://localhost:5173). Set `VITE_API_URL` if the API is hosted elsewhere; its default is `http://localhost:5000/api`.
 
-### Demo accounts
+### Local-only demo accounts
 
-The seed script currently creates these local-only officer accounts:
+The seed script creates these demo officer accounts:
 
 | Role | Email | Password |
 |---|---|---|
@@ -181,9 +173,9 @@ The seed script currently creates these local-only officer accounts:
 | District Officer (Salem) | `district@govt.in` | `password123` |
 | Field Officer (Salem) | `field@govt.in` | `password123` |
 
-Register a beneficiary through the UI. New passwords must be at least 12 characters and include uppercase, lowercase, and numeric characters. **Change/remove the seeded demo credentials before any shared or deployed demo.**
+Register a beneficiary through the UI. New passwords must be at least 12 characters and include uppercase, lowercase, and numeric characters. **These seeded credentials must never be used for a public or shared deployment.**
 
-## Run the full stack with Docker
+## 🐳 Run the full stack with Docker
 
 Prerequisite: Docker Desktop (or Docker Engine with the Compose plugin).
 
@@ -191,31 +183,23 @@ Prerequisite: Docker Desktop (or Docker Engine with the Compose plugin).
 docker compose up --build
 ```
 
-Open the frontend at `http://localhost:8080`. The API is also exposed at `http://localhost:5000`, and its database-aware health endpoint is `http://localhost:5000/health`.
+| Service | Local URL |
+|---|---|
+| Frontend | [http://localhost:8080](http://localhost:8080) |
+| Backend API | [http://localhost:5000](http://localhost:5000) |
+| Backend health | [http://localhost:5000/health](http://localhost:5000/health) |
 
-The first startup runs the database migration command automatically. To add local demo users and sample data, open another terminal and run:
+The first startup runs the database migration command automatically. To load local demo users and sample data:
 
 ```bash
 docker compose exec backend npm run seed
 ```
 
-The default Compose credentials are for local development only. Set `DB_PASSWORD` and `JWT_SECRET` in your shell or an untracked `.env` file before sharing the environment. Never expose the default credentials to the internet. The seed script is not intended for production data.
+Set `DB_PASSWORD` and `JWT_SECRET` in your shell or an untracked `.env` file before sharing the environment. Defaults are for local development only. Stop the stack with `docker compose down`; this retains the local database volume. `docker compose down -v` also deletes local database data.
 
-Stop the stack with `docker compose down`; retain the local database volume. To remove the database volume too, use `docker compose down -v` (this permanently deletes local database data).
+## 🔌 API overview
 
-## Hosted deployment setup (not yet live)
-
-The repository includes a Render blueprint (`render.yaml`) and Vercel SPA routing configuration (`Frontend/vercel.json`). These are deployment templates only; no live URL or successful hosted end-to-end test is currently verified.
-
-1. **Neon:** create a PostgreSQL database and copy its database name, username, password, and host.
-2. **Render:** create a Blueprint deployment from this repository. Set `DB_NAME`, `DB_USER`, `DB_PASSWORD`, and `DB_HOST` from Neon. Keep `DB_PORT=5432`; production mode requires verified PostgreSQL SSL. Set `CLIENT_ORIGIN` to the exact deployed Vercel origin.
-3. **Vercel:** import the repository and set the project root to `Frontend`. Add `VITE_API_URL=https://YOUR-RENDER-SERVICE.onrender.com/api`, replacing the example host with the actual Render service URL. Build command: `npm run build`; output directory: `dist`.
-4. After both services deploy, open Render's `/health` endpoint, sign in using a newly created demo account, and test beneficiary submission through the full officer workflow.
-5. Only then add the actual Vercel URL, API URL, and rotated demo logins to this README. Do not publish default seed credentials or any secret values.
-
-## API overview
-
-All API routes below are under `/api`, except `/health`. Protected routes require `Authorization: Bearer <token>`. Interactive API documentation is available at `/api/docs` when the backend is running.
+All routes below are under `/api`, except `/health`. Protected routes require a valid access token. Interactive API documentation is available at `/api/docs` when the backend is running.
 
 | Method | Endpoint | Access | Purpose |
 |---|---|---|---|
@@ -226,7 +210,7 @@ All API routes below are under `/api`, except `/health`. Protected routes requir
 | PATCH | `/auth/users/:id/deactivate` | Admin | Deactivate a user |
 | GET | `/schemes` | Authenticated | List/filter schemes |
 | POST | `/schemes` | Admin | Create a scheme |
-| GET | `/applications` | Authenticated | List applications within the caller's scope |
+| GET | `/applications` | Authenticated | List applications within caller scope |
 | POST | `/applications` | Beneficiary | Apply to an active scheme |
 | PUT | `/applications/:id/approve` | Field/District/Admin | Approve, forward, or reject at the permitted stage |
 | GET | `/applications/:id/history` | Authorized application viewer | Read the audit timeline |
@@ -235,30 +219,44 @@ All API routes below are under `/api`, except `/health`. Protected routes requir
 | GET | `/performance` | Authenticated | District-level metrics |
 | GET | `/notifications` | Authenticated | List recipient notifications |
 | PUT | `/notifications/:id/read` | Authenticated | Mark an accessible notification as read |
+| GET | `/health` | Public | Backend health |
 
-## CI and verification
+## 🧪 Testing and CI
 
-Check the [GitHub Actions page](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for the latest run. The workflow verifies:
+See [GitHub Actions](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postgresql-/actions) for the latest workflow result. CI currently checks:
 
-- Frontend ESLint, production build, and high/critical dependency audit.
-- Backend JavaScript syntax, ESLint, and PostgreSQL-backed Jest/Supertest integration tests.
-- Migrations and seeding against a disposable PostgreSQL service in CI only.
-- High/critical backend dependency audit and an uploaded coverage report.
-- Docker Compose configuration and backend/frontend image builds using the lockfiles validated by the lint, audit, and integration jobs.
-- Lockfile persistence to `main` only after the required validation jobs pass and only if `main` has not moved since the run began.
+- Frontend ESLint, production build, and high/critical dependency advisories.
+- Backend JavaScript syntax, ESLint, migrations, disposable database seeding, and PostgreSQL-backed Jest/Supertest integration tests.
+- Backend high/critical dependency advisories and an uploaded coverage report.
+- Docker Compose configuration and backend/frontend image builds using lockfiles validated by the frontend and backend jobs.
+- Full-stack container startup, frontend availability, and proxied/direct backend health endpoints.
+- Lockfile persistence to `main` only after required validation succeeds and only if `main` has not moved since the run began.
 
-The integration suite covers authentication and invalid input, district-scoped access, dashboard date filters, multi-stage approval, audit history, notifications, and transaction rollback on simulated persistence failures. A green CI run verifies these automated checks; it does not prove a hosted deployment or production readiness.
+The integration suite covers authentication and invalid input, district-scoped access, dashboard date filters, multi-stage approval, audit history, notifications, and rollback when simulated persistence writes fail. A green CI run confirms the automated checks for that commit; it does not prove a live hosted deployment or production readiness.
 
-## Evidence and deployment status
+## ☁️ Hosted deployment status
 
-- **Screenshots/GIF:** to be added after each role is run against a seeded database.
-- **Live deployment:** not yet verified. Deployment templates are committed for Vercel and Render; Neon credentials, connected hosting accounts, production environment variables, and a successful live smoke test are still required. This README does not claim a live URL.
-- **Repository topics/description:** should be set in GitHub repository settings.
+**No live deployment is currently verified.** The repository includes a Render blueprint (`render.yaml`) and Vercel SPA routing configuration (`Frontend/vercel.json`), which are templates rather than evidence of a successful hosted application.
 
-## Security note
+Before adding public URLs to this README:
 
-This project is not approved for real beneficiary or sensitive personal data. Before production use, verify the database migration strategy, automated integration tests, rate-limit behavior behind the actual proxy, security headers, token/session strategy, backups, privacy review, and deployment secrets. Use a managed PostgreSQL SSL connection and replace all local demo credentials.
+1. Provision a managed PostgreSQL database and configure SSL.
+2. Deploy the backend using protected environment variables and a verified migration strategy.
+3. Deploy the frontend with `VITE_API_URL` set to the actual backend URL.
+4. Run a real end-to-end smoke test through beneficiary submission, officer review, admin decision, audit history, and notifications.
+5. Document only the URLs and results that have been verified.
 
-## License
+## 🔒 Production-readiness checklist
+
+- [ ] Replace the migration bootstrap with a reviewed baseline and explicit versioned migrations.
+- [ ] Verify authorization, district isolation, and transaction rollback with automated tests.
+- [ ] Remove local demo credentials and rotate all secrets before any shared deployment.
+- [ ] Configure production database SSL, backups, monitoring, and least-privilege credentials.
+- [ ] Validate rate limiting and proxy trust settings in the actual hosting environment.
+- [ ] Complete a live end-to-end smoke test and document verified deployment URLs.
+- [ ] Add real screenshots for beneficiary, field officer, district officer, and admin workflows.
+- [ ] Keep [architecture diagrams](docs/architecture.md) aligned with each relevant code change.
+
+## 📄 License
 
 Released under the MIT License; see [LICENSE](LICENSE).
