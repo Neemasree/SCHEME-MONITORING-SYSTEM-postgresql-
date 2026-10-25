@@ -139,9 +139,6 @@ jobs:
       - name: Smoke-test frontend and proxied API health
         run: |
           set -euo pipefail
-          cleanup() { docker compose down; }
-          trap cleanup EXIT
-
           for attempt in $(seq 1 30); do
             if curl --fail --silent --show-error http://localhost:8080/ -o /dev/null; then
               break
