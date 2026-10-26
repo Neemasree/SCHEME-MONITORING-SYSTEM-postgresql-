@@ -362,4 +362,49 @@ describe('CivicTrack API integration', () => {
       where: { entityType: 'application', entityId: applicationId },
     })).toBe(auditCountBefore);
   });
+
+  test('prevents a beneficiary from reading another beneficiary application history', async () => {
+    const submitted = await request(app)
+      .post('/api/applications')
+      .set('Authorization', `Bearer ${beneficiaryToken}`)
+      .send({ schemeId: 1 });
+    expect(submitted.status).toBe(201);
+
+    const otherRegistration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Different Beneficiary',
+        email: `different.beneficiary.${Date.now()}@example.com`,
+        password: 'StrongPass123',
+      });
+    expect(otherRegistration.status).toBe(201);
+
+    const response = await request(app)
+      .get(`/api/applications/${submitted.body.application.id}/history`)
+      .set('Authorization', `Bearer ${otherRegistration.body.token}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body).not.toHaveProperty('history');
+  });
+
+  test('prevents a beneficiary from marking another user notification as read', async () => {
+    const adminId = jwt.verify(adminToken, env.JWT_SECRET).id;
+    const notification = await Notification.create({
+      userId: adminId,
+      role: 'admin',
+      title: 'Private admin notification test',
+      message: 'This notification belongs only to the administrator.',
+      type: 'info',
+      isRead: false,
+    });
+
+    const response = await request(app)
+      .put(`/api/notifications/${notification.id}/read`)
+      .set('Authorization', `Bearer ${beneficiaryToken}`);
+
+    expect(response.status).toBe(404);
+    await notification.reload();
+    expect(notification.isRead).toBe(false);
+  });
+
 });
