@@ -1,5 +1,5 @@
-// Central model registry. Requiring this module registers every model with the
-// shared Sequelize instance before sync/migration code runs.
+// Central model registry for API use. Database schema changes are managed by
+// versioned SQL migrations; this module must not be used to bootstrap tables.
 const User = require('./User');
 const Scheme = require('./Scheme');
 const Application = require('./Application');

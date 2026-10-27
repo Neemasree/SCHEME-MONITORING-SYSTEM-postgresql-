@@ -2,15 +2,9 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { sequelize } = require('../config/db');
 
-// Register all current models so the first migration can bootstrap a fresh DB.
-// Existing tables are not dropped or altered by this non-destructive sync.
-require('../models');
-
 const runMigrations = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync();
-
     await sequelize.query(`
       CREATE TABLE IF NOT EXISTS "SequelizeMeta" (
         "name" VARCHAR(255) PRIMARY KEY,

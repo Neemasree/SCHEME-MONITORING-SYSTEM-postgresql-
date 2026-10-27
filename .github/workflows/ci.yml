@@ -87,7 +87,9 @@ jobs:
           find . -path './node_modules' -prune -o -name '*.js' -type f -print0 | xargs -0 -n1 node --check
       - name: Backend lint
         run: npm run lint
-      - name: Apply database migrations
+      - name: Apply database migrations to a fresh database
+        run: npm run migrate
+      - name: Verify migration tracking is repeatable
         run: npm run migrate
       - name: Seed disposable CI database
         run: npm run seed

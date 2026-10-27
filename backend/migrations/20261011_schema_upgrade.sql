@@ -1,6 +1,5 @@
 -- Idempotent PostgreSQL schema upgrade for CivicTrack.
--- Existing base tables are expected; the migration runner bootstraps missing
--- tables from registered Sequelize models before executing this file.
+-- Core tables are created by 20261010_baseline.sql; this migration adds newer fields.
 ALTER TABLE "Users"
   ADD COLUMN IF NOT EXISTS "isActive" BOOLEAN NOT NULL DEFAULT TRUE;
 

@@ -149,7 +149,7 @@ npm run dev
 
 The API listens on `http://localhost:5000` by default. Health check: [http://localhost:5000/health](http://localhost:5000/health).
 
-> **Migration caution:** the current migration runner calls `sequelize.sync()` before applying SQL migrations. It does not use `force` or `alter`, but model-driven schema creation is still a production risk. Replace this with a reviewed baseline migration and versioned migrations before production use. Do not run the bootstrap flow against an important production database without a verified backup and schema review.
+> **Migration safety:** core tables are created by the checked-in `20261010_baseline.sql` migration; later SQL migrations are applied in filename order and recorded in `SequelizeMeta`. The migration runner does not call `sequelize.sync()`. CI exercises the migration sequence against a fresh disposable PostgreSQL database. Before updating an existing hosted database, take a verified backup and rehearse the upgrade against a representative staging copy; the baseline uses `CREATE TABLE IF NOT EXISTS` and does not rewrite existing table data.
 
 ### 5. Start the frontend
 
@@ -248,7 +248,7 @@ Before adding public URLs to this README:
 
 ## 🔒 Production-readiness checklist
 
-- [ ] Replace the migration bootstrap with a reviewed baseline and explicit versioned migrations.
+- [ ] Rehearse baseline/upgrade migrations against a representative existing schema in staging and document a recovery plan.
 - [ ] Verify authorization, district isolation, and transaction rollback with automated tests.
 - [ ] Remove local demo credentials and rotate all secrets before any shared deployment.
 - [ ] Configure production database SSL, backups, monitoring, and least-privilege credentials.
