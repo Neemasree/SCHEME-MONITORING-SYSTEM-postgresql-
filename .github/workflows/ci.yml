@@ -91,6 +91,20 @@ jobs:
         run: npm run migrate
       - name: Verify migration tracking is repeatable
         run: npm run migrate
+      - name: Create a legacy schema in a separate disposable database
+        env:
+          PGPASSWORD: ${{ env.DB_PASSWORD }}
+        run: |
+          createdb --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" govt_monitoring_legacy
+          psql --set ON_ERROR_STOP=1 --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname govt_monitoring_legacy --file tests/fixtures/legacy-schema.sql
+      - name: Upgrade the legacy schema using versioned migrations
+        run: DB_NAME=govt_monitoring_legacy npm run migrate
+      - name: Verify legacy data and upgraded schema
+        env:
+          PGPASSWORD: ${{ env.DB_PASSWORD }}
+        run: psql --set ON_ERROR_STOP=1 --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname govt_monitoring_legacy --file tests/fixtures/assert-upgraded-schema.sql
+      - name: Verify legacy migration tracking is repeatable
+        run: DB_NAME=govt_monitoring_legacy npm run migrate
       - name: Seed disposable CI database
         run: npm run seed
       - name: Run PostgreSQL API integration tests with coverage

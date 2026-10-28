@@ -149,7 +149,7 @@ npm run dev
 
 The API listens on `http://localhost:5000` by default. Health check: [http://localhost:5000/health](http://localhost:5000/health).
 
-> **Migration safety:** core tables are created by the checked-in `20261010_baseline.sql` migration; later SQL migrations are applied in filename order and recorded in `SequelizeMeta`. The migration runner does not call `sequelize.sync()`. CI exercises the migration sequence against a fresh disposable PostgreSQL database. Before updating an existing hosted database, take a verified backup and rehearse the upgrade against a representative staging copy; the baseline uses `CREATE TABLE IF NOT EXISTS` and does not rewrite existing table data.
+> **Migration safety:** core tables are created by the checked-in `20261010_baseline.sql` migration; later SQL migrations are applied in filename order and recorded in `SequelizeMeta`. The migration runner does not call `sequelize.sync()`. CI exercises migrations against both a fresh disposable PostgreSQL database and a separate fixture that simulates the earlier core schema, then verifies that existing fixture records survive the upgrade. Before updating an existing hosted database, still rehearse against a representative staging copy. Before updating an existing hosted database, take a verified backup and rehearse the upgrade against a representative staging copy; the baseline uses `CREATE TABLE IF NOT EXISTS` and does not rewrite existing table data.
 
 ### 5. Start the frontend
 
