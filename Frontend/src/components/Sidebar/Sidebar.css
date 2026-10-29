@@ -162,6 +162,11 @@
     color: var(--status-rejected);
 }
 
+/* The phone dock gets its own logout action because the desktop footer is hidden. */
+.mobile-logout-item {
+    display: none;
+}
+
 /* Responsive navigation: compact rail for tablets, bottom dock for phones. */
 @media (max-width: 900px) {
     .sidebar {
@@ -231,6 +236,10 @@
     .sidebar .sidebar-header,
     .sidebar .sidebar-footer {
         display: none;
+    }
+
+    .sidebar .mobile-logout-item {
+        display: block;
     }
 
     .sidebar .sidebar-nav {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileText, CheckSquare, Users, TrendingUp, Settings, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, CheckSquare, Users, TrendingUp, LogOut } from 'lucide-react';
 import './Sidebar.css';
 
 const Sidebar = ({ role, onLogout }) => {
@@ -26,26 +26,39 @@ const Sidebar = ({ role, onLogout }) => {
                     <div className="logo-icon">🏛️</div>
                     {!collapsed && <span className="logo-text">SMS Portal</span>}
                 </div>
-                <button className="collapse-btn" onClick={() => setCollapsed(!collapsed)}>
+                <button type="button" className="collapse-btn" onClick={() => setCollapsed(!collapsed)} aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'} aria-expanded={!collapsed}>
                     {collapsed ? '→' : '←'}
                 </button>
             </div>
 
-            <nav className="sidebar-nav">
+            <nav className="sidebar-nav" aria-label="Primary navigation">
                 <ul>
                     {filteredLinks.map((link) => (
                         <li key={link.path}>
                             <NavLink
                                 to={link.path}
                                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                                title={collapsed ? link.name : ''}
+                                title={link.name}
+                                aria-label={link.name}
                             >
-                                <div className="icon-wrapper">{link.icon}</div>
+                                <div className="icon-wrapper" aria-hidden="true">{link.icon}</div>
                                 {!collapsed && <span className="link-text">{link.name}</span>}
                                 {location.pathname === link.path && !collapsed && <div className="active-indicator"></div>}
                             </NavLink>
                         </li>
                     ))}
+                    <li className="mobile-logout-item">
+                        <button
+                            type="button"
+                            className="nav-link logout-btn mobile-logout-btn"
+                            onClick={onLogout}
+                            aria-label="Log out"
+                            title="Log out"
+                        >
+                            <div className="icon-wrapper" aria-hidden="true"><LogOut size={20} /></div>
+                            <span className="link-text">Log out</span>
+                        </button>
+                    </li>
                 </ul>
             </nav>
 
