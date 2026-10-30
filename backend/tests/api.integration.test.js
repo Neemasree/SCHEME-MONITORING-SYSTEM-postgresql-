@@ -100,9 +100,19 @@ describe('CivicTrack API integration', () => {
       });
     expect(registration.status).toBe(201);
 
+    const fieldOfficerId = jwt.verify(fieldToken, env.JWT_SECRET).id;
+    const pendingNotificationCountBefore = await Notification.count({
+      where: { userId: fieldOfficerId, title: 'New application to verify' },
+    });
+    const originalBulkCreate = Notification.bulkCreate.bind(Notification);
     const notificationCreate = jest
       .spyOn(Notification, 'bulkCreate')
-      .mockRejectedValueOnce(new Error('Simulated notification persistence failure'));
+      .mockImplementationOnce(async (...args) => {
+        // Persist inside the request transaction, then fail. The transaction
+        // must roll this row back along with the application and audit event.
+        await originalBulkCreate(...args);
+        throw new Error('Simulated failure after submission notification insert');
+      });
 
     let response;
     try {
@@ -126,6 +136,9 @@ describe('CivicTrack API integration', () => {
         },
       }),
     ).toBe(0);
+    expect(await Notification.count({
+      where: { userId: fieldOfficerId, title: 'New application to verify' },
+    })).toBe(pendingNotificationCountBefore);
   });
 
   test('requires a remark when rejecting an application', async () => {
@@ -340,9 +353,19 @@ describe('CivicTrack API integration', () => {
       where: { entityType: 'application', entityId: applicationId },
     });
 
+    const districtOfficerId = jwt.verify(districtToken, env.JWT_SECRET).id;
+    const forwardedNotificationCountBefore = await Notification.count({
+      where: { userId: districtOfficerId, title: 'Application forwarded for district review' },
+    });
+    const originalBulkCreate = Notification.bulkCreate.bind(Notification);
     const notificationCreate = jest
       .spyOn(Notification, 'bulkCreate')
-      .mockRejectedValueOnce(new Error('Simulated approval notification persistence failure'));
+      .mockImplementationOnce(async (...args) => {
+        // Force failure only after the notification INSERT has executed in
+        // the same transaction as the application and audit updates.
+        await originalBulkCreate(...args);
+        throw new Error('Simulated failure after approval notification insert');
+      });
 
     let response;
     try {
@@ -361,6 +384,9 @@ describe('CivicTrack API integration', () => {
     expect(await AuditLog.count({
       where: { entityType: 'application', entityId: applicationId },
     })).toBe(auditCountBefore);
+    expect(await Notification.count({
+      where: { userId: districtOfficerId, title: 'Application forwarded for district review' },
+    })).toBe(forwardedNotificationCountBefore);
   });
 
   test('prevents a beneficiary from reading another beneficiary application history', async () => {
