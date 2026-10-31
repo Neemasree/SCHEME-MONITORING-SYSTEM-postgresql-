@@ -6,6 +6,7 @@ const { sequelize } = require('../config/db');
 const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
 const Notification = require('../models/Notification');
+const User = require('../models/User');
 require('../models');
 
 describe('CivicTrack API integration', () => {
@@ -431,6 +432,100 @@ describe('CivicTrack API integration', () => {
     expect(response.status).toBe(404);
     await notification.reload();
     expect(notification.isRead).toBe(false);
+  });
+
+  test('rejects public registration attempts to assign privileged roles or districts', async () => {
+    const email = `privilege.escalation.${Date.now()}@example.com`;
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Privilege Escalation Attempt',
+        email,
+        password: 'StrongPass123',
+        role: 'admin',
+        district: 'Coimbatore',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+    expect(await User.findOne({ where: { email } })).toBeNull();
+  });
+
+  test('prevents field and district officers from provisioning privileged users', async () => {
+    const timestamp = Date.now();
+    const attempts = [
+      { token: fieldToken, email: `field.provision.${timestamp}@example.com` },
+      { token: districtToken, email: `district.provision.${timestamp}@example.com` },
+    ];
+
+    for (const attempt of attempts) {
+      const response = await request(app)
+        .post('/api/auth/users')
+        .set('Authorization', `Bearer ${attempt.token}`)
+        .send({
+          name: 'Unauthorized Administrator',
+          email: attempt.email,
+          password: 'StrongPass123',
+          role: 'admin',
+        });
+
+      expect(response.status).toBe(403);
+      expect(response.body.code).toBe('FORBIDDEN');
+      expect(await User.findOne({ where: { email: attempt.email } })).toBeNull();
+    }
+  });
+
+  test('invalidates an existing access token immediately after account deactivation', async () => {
+    const email = `deactivated.token.${Date.now()}@example.com`;
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Deactivated Token User',
+        email,
+        password: 'StrongPass123',
+      });
+    expect(registration.status).toBe(201);
+
+    const deactivate = await request(app)
+      .patch(`/api/auth/users/${registration.body.id}/deactivate`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(deactivate.status).toBe(200);
+
+    const user = await User.findByPk(registration.body.id);
+    expect(user.isActive).toBe(false);
+
+    const protectedRequest = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${registration.body.token}`);
+    expect(protectedRequest.status).toBe(401);
+    expect(protectedRequest.body.code).toBe('UNAUTHORIZED');
+
+    const loginAfterDeactivation = await request(app)
+      .post('/api/auth/login')
+      .send({ email, password: 'StrongPass123' });
+    expect(loginAfterDeactivation.status).toBe(403);
+  });
+
+  test('limits district officer application results to the assigned district', async () => {
+    const response = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${districtToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data.length).toBeGreaterThan(0);
+    expect(response.body.data.every((application) => application.district === 'Salem')).toBe(true);
+  });
+
+  test('prevents district officers from reading application history outside their district', async () => {
+    const application = await Application.findByPk(102);
+    expect(application.district).toBe('Coimbatore');
+
+    const response = await request(app)
+      .get('/api/applications/102/history')
+      .set('Authorization', `Bearer ${districtToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.code).toBe('NOT_FOUND');
   });
 
 });
