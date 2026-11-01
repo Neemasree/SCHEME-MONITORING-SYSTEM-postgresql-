@@ -6,6 +6,7 @@ const baseUrl = (process.env.CIVICTRACK_BASE_URL || 'http://127.0.0.1:8080').rep
 const email = `civictrack.e2e.${randomUUID()}@example.test`;
 const password = 'E2eStrongPass123';
 const browser = await chromium.launch({ headless: true });
+const page = await browser.newPage();
 const pageErrors = [];
 
 const loginAs = async (roleLabel, accountEmail, accountPassword, expectedPath) => {
