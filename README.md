@@ -229,10 +229,10 @@ See [GitHub Actions](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postg
 - Backend JavaScript syntax, ESLint, migrations, disposable database seeding, and PostgreSQL-backed Jest/Supertest integration tests.
 - Backend high/critical dependency advisories and an uploaded coverage report.
 - Docker Compose configuration and backend/frontend image builds using lockfiles validated by the frontend and backend jobs.
-- Full-stack Docker startup, frontend availability, and proxied/direct backend health endpoints, followed by a Chromium/Playwright browser journey that registers a beneficiary, signs in, loads an active scheme, submits an application, and verifies refreshed application history through the Nginx `/api` proxy.
+- Full-stack Docker startup, frontend availability, and proxied/direct backend health endpoints, followed by a Chromium/Playwright browser journey that registers a beneficiary, submits an application, completes field-officer and district-officer review plus final admin approval, and verifies the beneficiary's refreshed status and approval notification through the Nginx `/api` proxy.
 - Lockfile persistence to `main` only after required validation succeeds and only if `main` has not moved since the run began.
 
-The backend integration suite covers authentication and invalid input, district-scoped access, dashboard date filters, multi-stage approval, audit history, notifications, and rollback when simulated persistence writes fail. A separate browser journey exercises beneficiary registration, login, active-scheme loading, application submission, and refreshed application-history rendering through the Docker/Nginx frontend. A green CI run confirms the automated checks for that commit; it does not prove a live hosted deployment or production readiness.
+The backend integration suite covers authentication and invalid input, district-scoped access, dashboard date filters, multi-stage approval, audit history, notifications, and rollback when simulated persistence writes fail. A separate browser journey exercises beneficiary registration and application submission, all three approval stages, refreshed beneficiary status, and the final approval notification through the Docker/Nginx frontend. A green CI run confirms the automated checks for that commit; it does not prove a live hosted deployment or production readiness.
 
 ## ☁️ Hosted deployment status
 
