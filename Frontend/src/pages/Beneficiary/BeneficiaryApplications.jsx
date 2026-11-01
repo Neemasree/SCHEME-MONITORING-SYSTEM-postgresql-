@@ -22,7 +22,11 @@ const BeneficiaryApplications = ({ username }) => {
                 ? schemeResponse.data
                 : (schemeResponse.data.data || []);
             setSchemes(availableSchemes.filter((scheme) => scheme.status === 'Active' && scheme.district));
-            setApplications(Array.isArray(applicationResponse.data) ? applicationResponse.data : []);
+            const applicationPayload = applicationResponse.data;
+            const userApplications = Array.isArray(applicationPayload)
+                ? applicationPayload
+                : (Array.isArray(applicationPayload?.data) ? applicationPayload.data : []);
+            setApplications(userApplications);
         } catch (requestError) {
             setError(requestError.response?.data?.message || 'Unable to load your beneficiary portal.');
         } finally {
