@@ -139,6 +139,8 @@ This is a **logical overview**, not a replacement for the Sequelize models and S
 
 ## 4. Deployment topology
 
+### Local Docker Compose
+
 ```mermaid
 flowchart LR
   BROWSER["Browser"] -->|"localhost:8080"| NGINX["Frontend container<br/>Nginx + built React SPA"]
@@ -148,7 +150,20 @@ flowchart LR
   DB --> READY["Readiness / health check"]
 ```
 
-Docker Compose is intended for a local demonstration. GitHub Actions checks frontend lint/build, backend syntax/lint, PostgreSQL-backed integration tests, dependency advisories, Compose configuration, image builds, and a full-stack smoke test. A passing CI run does **not** establish that a hosted deployment is live or production-ready.
+### Hosted Render target defined by `render.yaml`
+
+```mermaid
+flowchart LR
+  BROWSER["Browser"] -->|"HTTPS"| CDN["Render Static Site<br/>React + Vite SPA<br/>CDN · SPA rewrite"]
+  CDN -->|"HTTPS JSON + JWT<br/>VITE_API_URL /api"| API["Render Node Web Service<br/>Express · /health"]
+  API -->|"TLS with certificate verification"| DB[("Externally managed<br/>PostgreSQL")]
+  CI["GitHub Actions<br/>lint · build · tests · audit · browser E2E"] -. "checksPass deploy gate" .-> CDN
+  CI -. "checksPass deploy gate" .-> API
+```
+
+The Render Blueprint defines the frontend and API services but deliberately does **not** provision a database. Supply an existing managed PostgreSQL connection through protected service environment variables. The frontend's `VITE_API_URL` is embedded at build time and must be the API's absolute HTTPS URL ending in `/api`; the API's `CLIENT_ORIGIN` must match the frontend's HTTPS origin. Both Render services are configured to auto-deploy only after GitHub checks pass.
+
+The Render topology is a deployment target, not evidence of a live deployment. A successful local Docker/browser CI run does **not** establish that Render services have been created, that a managed database is connected, or that a hosted end-to-end workflow has passed. Rehearse migrations and recovery against staging before connecting production data.
 
 ## 5. Architecture update checklist
 
