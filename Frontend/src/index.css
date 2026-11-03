@@ -261,6 +261,10 @@ button:disabled {
     --navbar-height: 64px;
   }
 
+  .main-content {
+    margin-left: 76px;
+  }
+
   .page-content {
     padding: 22px;
   }
@@ -288,6 +292,7 @@ button:disabled {
 
   .main-content {
     min-width: 0;
+    margin-left: 0;
     height: 100vh;
     height: 100dvh;
   }
