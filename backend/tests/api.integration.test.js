@@ -162,6 +162,40 @@ describe('CivicTrack API integration', () => {
     expect(response.body.data.every((application) => application.district === 'Salem')).toBe(true);
   });
 
+  test('prevents field officers from overriding their district when listing schemes', async () => {
+    const fieldResponse = await request(app)
+      .get('/api/schemes?district=Coimbatore&page=1&limit=10')
+      .set('Authorization', `Bearer ${fieldToken}`);
+    const adminResponse = await request(app)
+      .get('/api/schemes?district=Coimbatore&page=1&limit=10')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(fieldResponse.status).toBe(200);
+    expect(fieldResponse.body.data.length).toBeGreaterThan(0);
+    expect(fieldResponse.body.data.every((scheme) => scheme.district === 'Salem')).toBe(true);
+    expect(fieldResponse.body.pagination.total).toBe(1);
+
+    expect(adminResponse.status).toBe(200);
+    expect(adminResponse.body.data.length).toBe(1);
+    expect(adminResponse.body.data[0].district).toBe('Coimbatore');
+  });
+
+  test('limits district performance metrics to the authenticated officer district', async () => {
+    const fieldResponse = await request(app)
+      .get('/api/performance')
+      .set('Authorization', `Bearer ${fieldToken}`);
+    const adminResponse = await request(app)
+      .get('/api/performance')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(fieldResponse.status).toBe(200);
+    expect(fieldResponse.body.length).toBeGreaterThan(0);
+    expect(fieldResponse.body.every((row) => row.district === 'Salem')).toBe(true);
+
+    expect(adminResponse.status).toBe(200);
+    expect(adminResponse.body.some((row) => row.district === 'Coimbatore')).toBe(true);
+  });
+
   test('prevents a district officer from approving an application outside their district', async () => {
     const applicationBefore = await Application.findByPk(102);
     expect(applicationBefore.district).toBe('Coimbatore');
