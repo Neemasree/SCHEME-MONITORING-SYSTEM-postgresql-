@@ -129,6 +129,39 @@ try {
     await page.getByRole('heading', { name: 'Notification Hub' }).waitFor({ state: 'visible' });
     await page.getByRole('heading', { name: 'Application approved' }).waitFor({ state: 'visible' });
 
+    // Exercise the responsive navigation and page width at phone and tablet sizes.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.getByRole('heading', { name: 'Notification Hub' }).waitFor({ state: 'visible' });
+    const mobileLayout = await page.evaluate(() => {
+        const sidebar = document.querySelector('.sidebar');
+        const main = document.querySelector('.main-content');
+        return {
+            documentWidth: document.documentElement.scrollWidth,
+            viewportWidth: document.documentElement.clientWidth,
+            sidebarPosition: getComputedStyle(sidebar).position,
+            sidebarBottom: getComputedStyle(sidebar).bottom,
+            mainMarginLeft: getComputedStyle(main).marginLeft,
+        };
+    });
+    assert.ok(
+        mobileLayout.documentWidth <= mobileLayout.viewportWidth,
+        'The mobile layout should not create page-level horizontal overflow',
+    );
+    assert.equal(mobileLayout.sidebarPosition, 'fixed');
+    assert.equal(mobileLayout.sidebarBottom, '0px');
+    assert.equal(mobileLayout.mainMarginLeft, '0px');
+
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.getByRole('heading', { name: 'Notification Hub' }).waitFor({ state: 'visible' });
+    const tabletLayout = await page.evaluate(() => ({
+        sidebarWidth: document.querySelector('.sidebar').getBoundingClientRect().width,
+        mainMarginLeft: getComputedStyle(document.querySelector('.main-content')).marginLeft,
+    }));
+    assert.equal(tabletLayout.sidebarWidth, 76);
+    assert.equal(tabletLayout.mainMarginLeft, '76px');
+
     assert.deepEqual(pageErrors, [], 'The browser journey should not produce uncaught page errors');
     console.log('PASS: beneficiary registration, application submission, field review, district review, final admin approval, refreshed beneficiary status, and approval notification.');
 } finally {
