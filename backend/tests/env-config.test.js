@@ -41,7 +41,11 @@ describe('production environment validation', () => {
   test.each([
     'http://civictrack.example.com',
     'https://civictrack.example.com/admin',
+    'https://civictrack.example.com?redirect=https://attacker.example',
+    'https://civictrack.example.com#fragment',
+    'https://user@civictrack.example.com',
     'https://*.example.com',
+    'https://api.*.example.com',
     'http://localhost:5173',
   ])('rejects an unsafe production origin: %s', (origin) => {
     const result = loadProductionConfig(origin);
