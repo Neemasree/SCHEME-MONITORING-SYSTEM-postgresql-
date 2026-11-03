@@ -33,6 +33,7 @@ const envSchema = z.object({
 
     if (
       parsedOrigin.protocol !== 'https:' ||
+      parsedOrigin.hostname.includes('*') ||
       parsedOrigin.origin !== origin ||
       parsedOrigin.hostname === 'localhost' ||
       parsedOrigin.hostname.endsWith('.localhost')
