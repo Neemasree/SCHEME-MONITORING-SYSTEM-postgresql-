@@ -102,7 +102,7 @@ jobs:
           second_migration_pid=$!
           wait "$first_migration_pid"
           wait "$second_migration_pid"
-          psql --set ON_ERROR_STOP=1 --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname govt_monitoring_concurrent --command 'SELECT CASE WHEN COUNT(*) = 2 THEN 1 ELSE 1 / 0 END FROM "SequelizeMeta"'
+          psql --set ON_ERROR_STOP=1 --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname govt_monitoring_concurrent --command 'DO $ BEGIN IF (SELECT COUNT(*) FROM "SequelizeMeta") <> 2 THEN RAISE EXCEPTION ''Expected exactly two recorded migrations''; END IF; END $;'
       - name: Create a legacy schema in a separate disposable database
         env:
           PGPASSWORD: ${{ env.DB_PASSWORD }}
