@@ -151,6 +151,23 @@ The API listens on `http://localhost:5000` by default. Health check: [http://loc
 
 > **Migration safety:** core tables are created by the checked-in `20261010_baseline.sql` migration; later SQL migrations are applied in filename order and recorded in `SequelizeMeta`. The migration runner does not call `sequelize.sync()`. Each migration batch is serialized with a PostgreSQL transaction-scoped advisory lock, so overlapping deploy/startup processes cannot race to apply the same pending SQL; the schema changes and migration tracking rows commit atomically. CI exercises both ordinary and concurrent migrations against disposable PostgreSQL databases, as well as migrations against a fresh disposable PostgreSQL database and a separate fixture that simulates the earlier core schema, then verifies that existing fixture records survive the upgrade. Before updating an existing hosted database, take a verified backup and rehearse the upgrade against a representative staging copy; the baseline uses `CREATE TABLE IF NOT EXISTS` and does not rewrite existing table data.
 
+### Database backup and recovery
+
+The backend includes PostgreSQL custom-format backup and restore commands (requires the PostgreSQL client tools `pg_dump` and `pg_restore`):
+
+```bash
+# Create a timestamped backup under backend/backups/
+npm run db:backup
+
+# Or choose an explicit output file
+npm run db:backup -- --output ./backups/before-release.dump
+
+# Restore only after confirming the target database and backup
+npm run db:restore -- ./backups/before-release.dump --confirm
+```
+
+Both commands use the configured `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, and `DB_PORT` environment variables. Backups are not committed to Git. Restore uses `pg_restore --clean --if-exists` and replaces matching database objects; it is destructive. Production restores are blocked unless `ALLOW_PRODUCTION_RESTORE=true` is explicitly set after an approved recovery procedure. Always restore into a staging database first and verify the application before considering production recovery. CI creates a backup from a disposable PostgreSQL database, restores it into a separate disposable database, and verifies that seeded user records survive the round trip.
+
 ### 5. Start the frontend
 
 Open a second terminal from the repository root:
