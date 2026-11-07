@@ -12,7 +12,9 @@
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:backup": "node scripts/backup.js",
+    "db:restore": "node scripts/restore.js"
   },
   "keywords": [],
   "author": "",
