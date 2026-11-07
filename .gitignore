@@ -7,3 +7,8 @@ dist/
 coverage/
 *.log
 .DS_Store
+
+# Local PostgreSQL backups (may contain personal data)
+backups/
+backend/backups/
+*.dump
