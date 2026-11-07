@@ -2,7 +2,7 @@ const { spawnSync } = require('node:child_process');
 const path = require('node:path');
 const fs = require('node:fs');
 
-const required = ['DB_NAME', 'DB_USER', 'DB_HOST'];
+const required = ['DB_NAME', 'DB_USER', 'DB_PASSWORD', 'DB_HOST'];
 for (const key of required) {
   if (!process.env[key]) {
     console.error(`Missing required environment variable: ${key}`);
