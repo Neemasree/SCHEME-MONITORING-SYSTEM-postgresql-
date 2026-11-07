@@ -58,6 +58,7 @@
     "testEnvironment": "node",
     "collectCoverageFrom": [
       "**/*.js",
+      "!scripts/**",
       "!node_modules/**",
       "!coverage/**",
       "!tests/**",
