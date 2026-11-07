@@ -120,6 +120,16 @@ jobs:
         run: DB_NAME=govt_monitoring_legacy npm run migrate
       - name: Seed disposable CI database
         run: npm run seed
+      - name: Verify PostgreSQL backup and restore against disposable databases
+        env:
+          PGPASSWORD: ${{ env.DB_PASSWORD }}
+        run: |
+          npm run db:backup -- --output /tmp/civictrack-ci.dump
+          createdb --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" govt_monitoring_restore
+          DB_NAME=govt_monitoring_restore npm run db:restore -- /tmp/civictrack-ci.dump --confirm
+          restored_users=$(psql --tuples-only --no-align --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" --dbname govt_monitoring_restore --command 'SELECT COUNT(*) FROM "Users"')
+          test "$restored_users" -gt 0
+          dropdb --host "$DB_HOST" --port "$DB_PORT" --username "$DB_USER" govt_monitoring_restore
       - name: Run PostgreSQL API integration tests with coverage
         run: npm test
       - name: Upload backend coverage report
