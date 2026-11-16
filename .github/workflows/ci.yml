@@ -214,7 +214,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: civictrack-role-screenshots
-          path: Frontend/artifacts/screenshots/
+          path: artifacts/screenshots/
           if-no-files-found: ignore
       - name: Stop smoke-test containers
         if: always()
