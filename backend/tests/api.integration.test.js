@@ -653,4 +653,83 @@ describe('CivicTrack API integration', () => {
     expect(missing.status).toBe(404);
   });
 
+
+  test('exposes a database-aware health endpoint and API root status', async () => {
+    const [health, root] = await Promise.all([
+      request(app).get('/health'),
+      request(app).get('/'),
+    ]);
+
+    expect(health.status).toBe(200);
+    expect(health.body).toMatchObject({ status: 'ok', database: 'ok' });
+    expect(health.body.requestId).toBeTruthy();
+    expect(health.headers['x-request-id']).toBe(health.body.requestId);
+    expect(root.status).toBe(200);
+    expect(root.body.code).toBe('API_READY');
+  });
+
+  test('allows administrators to create a valid scheme', async () => {
+    const response = await request(app)
+      .post('/api/schemes')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        schemeName: 'Integration Test Education Grant',
+        description: 'A test scheme created by the integration suite.',
+        budget: 250000,
+        district: 'Erode',
+        startDate: '2026-11-01',
+        endDate: '2027-03-31',
+        status: 'Active',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body.schemeName).toBe('Integration Test Education Grant');
+    expect(response.body.district).toBe('Erode');
+  });
+
+  test('blocks beneficiaries from creating schemes', async () => {
+    const response = await request(app)
+      .post('/api/schemes')
+      .set('Authorization', `Bearer ${beneficiaryToken}`)
+      .send({ schemeName: 'Unauthorized scheme' });
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('FORBIDDEN');
+  });
+
+  test('rejects schemes with an end date before their start date', async () => {
+    const response = await request(app)
+      .post('/api/schemes')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        schemeName: 'Invalid Date Range Scheme',
+        startDate: '2027-03-31',
+        endDate: '2027-03-01',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  test('allows a recipient to mark their own notification as read', async () => {
+    const beneficiaryId = jwt.verify(beneficiaryToken, env.JWT_SECRET).id;
+    const notification = await Notification.create({
+      userId: beneficiaryId,
+      role: 'beneficiary',
+      title: 'Read-state integration test',
+      message: 'This notification belongs to the test beneficiary.',
+      type: 'info',
+      isRead: false,
+    });
+
+    const response = await request(app)
+      .put(`/api/notifications/${notification.id}/read`)
+      .set('Authorization', `Bearer ${beneficiaryToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.isRead).toBe(true);
+    await notification.reload();
+    expect(notification.isRead).toBe(true);
+  });
+
 });
