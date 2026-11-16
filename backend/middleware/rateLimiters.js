@@ -2,7 +2,8 @@ const rateLimit = require('express-rate-limit');
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 10,
+  // Keep production throttling strict; integration tests exercise many auth flows from one test IP.
+  limit: process.env.NODE_ENV === 'test' ? 1000 : 10,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   message: {
