@@ -449,6 +449,14 @@ describe('CivicTrack API integration', () => {
   });
 
   test('prevents a beneficiary from marking another user notification as read', async () => {
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Notification Access Beneficiary',
+        email: `notification.access.${Date.now()}@example.com`,
+        password: 'StrongPass123',
+      });
+    expect(registration.status).toBe(201);
     const adminId = jwt.verify(adminToken, env.JWT_SECRET).id;
     const notification = await Notification.create({
       userId: adminId,
