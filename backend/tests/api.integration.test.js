@@ -7,7 +7,6 @@ const Application = require('../models/Application');
 const AuditLog = require('../models/AuditLog');
 const Notification = require('../models/Notification');
 const User = require('../models/User');
-const { authLimiter } = require('../middleware/rateLimiters');
 require('../models');
 
 describe('CivicTrack API integration', () => {
@@ -40,11 +39,6 @@ describe('CivicTrack API integration', () => {
       });
     expect(registration.status).toBe(201);
     beneficiaryToken = registration.body.token;
-  });
-
-  beforeEach(() => {
-    // Keep the production IP-based auth limit intact while isolating each API test.
-    authLimiter.resetKey('::ffff:127.0.0.1');
   });
 
   afterAll(async () => {
