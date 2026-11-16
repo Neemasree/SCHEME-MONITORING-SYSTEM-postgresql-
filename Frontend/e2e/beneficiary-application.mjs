@@ -81,7 +81,9 @@ try {
 
     // Authenticated beneficiaries must not enter administrator routes by URL.
     await page.goto(`${baseUrl}/admin/users`, { waitUntil: 'domcontentloaded' });
-    await page.waitForURL((url) => url.pathname === '/beneficiary/applications');
+    if (new URL(page.url()).pathname !== '/beneficiary/applications') {
+        throw new Error('Beneficiary was not redirected away from the administrator route.');
+    }
     await page.getByRole('heading', { name: 'My Scheme Applications' }).waitFor({
         state: 'visible',
     });
@@ -105,7 +107,9 @@ try {
 
     // Field officers must not enter administrator-only screens by URL.
     await page.goto(`${baseUrl}/admin/users`, { waitUntil: 'domcontentloaded' });
-    await page.waitForURL((url) => url.pathname === '/field/dashboard');
+    if (new URL(page.url()).pathname !== '/field/dashboard') {
+        throw new Error('Field Officer was not redirected away from the administrator route.');
+    }
     await page.getByRole('heading', { name: 'Dashboard Overview' }).waitFor({ state: 'visible' });
 
     await reviewApplication({
