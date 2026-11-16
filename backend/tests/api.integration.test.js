@@ -688,9 +688,18 @@ describe('CivicTrack API integration', () => {
   });
 
   test('blocks beneficiaries from creating schemes', async () => {
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Scheme Access Beneficiary',
+        email: `scheme.access.${Date.now()}@example.com`,
+        password: 'StrongPass123',
+      });
+    expect(registration.status).toBe(201);
+
     const response = await request(app)
       .post('/api/schemes')
-      .set('Authorization', `Bearer ${beneficiaryToken}`)
+      .set('Authorization', `Bearer ${registration.body.token}`)
       .send({ schemeName: 'Unauthorized scheme' });
 
     expect(response.status).toBe(403);
@@ -712,7 +721,15 @@ describe('CivicTrack API integration', () => {
   });
 
   test('allows a recipient to mark their own notification as read', async () => {
-    const beneficiaryId = jwt.verify(beneficiaryToken, env.JWT_SECRET).id;
+    const registration = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Notification Recipient',
+        email: `notification.recipient.${Date.now()}@example.com`,
+        password: 'StrongPass123',
+      });
+    expect(registration.status).toBe(201);
+    const beneficiaryId = registration.body.id;
     const notification = await Notification.create({
       userId: beneficiaryId,
       role: 'beneficiary',
