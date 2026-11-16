@@ -11,13 +11,13 @@ const requiredEnvironment = {
   SQL_LOGGING: 'false',
 };
 
-const loadProductionConfig = (clientOrigin) => spawnSync(
+const loadProductionConfig = (clientOrigin, extraEnvironment = {}) => spawnSync(
   process.execPath,
   ['-e', "require('./config/env')"],
   {
     cwd: process.cwd(),
     encoding: 'utf8',
-    env: { ...process.env, ...requiredEnvironment, CLIENT_ORIGIN: clientOrigin },
+    env: { ...process.env, ...requiredEnvironment, CLIENT_ORIGIN: clientOrigin, ...extraEnvironment },
   },
 );
 
@@ -36,6 +36,26 @@ describe('production environment validation', () => {
 
     expect(result.status).toBe(0);
     expect(result.stderr).toBe('');
+  });
+
+  test('accepts the Render private-database TLS setting while keeping TLS required', () => {
+    const result = loadProductionConfig(
+      'https://civictrack.example.com',
+      { DB_SSL_REJECT_UNAUTHORIZED: 'false' },
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe('');
+  });
+
+  test('rejects an invalid PostgreSQL TLS verification setting', () => {
+    const result = loadProductionConfig(
+      'https://civictrack.example.com',
+      { DB_SSL_REJECT_UNAUTHORIZED: 'sometimes' },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain('DB_SSL_REJECT_UNAUTHORIZED');
   });
 
   test.each([
