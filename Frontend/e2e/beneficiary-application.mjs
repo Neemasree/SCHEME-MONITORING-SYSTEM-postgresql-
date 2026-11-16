@@ -72,6 +72,14 @@ try {
     await page.getByRole('heading', { name: 'My Scheme Applications' }).waitFor({
         state: 'visible',
     });
+
+    // Authenticated beneficiaries must not enter administrator routes by URL.
+    await page.goto(`${baseUrl}/admin/users`, { waitUntil: 'domcontentloaded' });
+    await page.waitForURL((url) => url.pathname === '/beneficiary/applications');
+    await page.getByRole('heading', { name: 'My Scheme Applications' }).waitFor({
+        state: 'visible',
+    });
+
     const schemeSelect = page.getByLabel('Active scheme');
     await schemeSelect.waitFor({ state: 'visible' });
     await schemeSelect.selectOption('1');
@@ -88,6 +96,11 @@ try {
     await submittedApplication.getByText('Pending Field Officer', { exact: true }).waitFor({
         state: 'visible',
     });
+
+    // Field officers must not enter administrator-only screens by URL.
+    await page.goto(`${baseUrl}/admin/users`, { waitUntil: 'domcontentloaded' });
+    await page.waitForURL((url) => url.pathname === '/field/dashboard');
+    await page.getByRole('heading', { name: 'Dashboard Overview' }).waitFor({ state: 'visible' });
 
     await reviewApplication({
         roleLabel: 'Field Officer',
