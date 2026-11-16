@@ -248,8 +248,24 @@ See [GitHub Actions](https://github.com/Neemasree/SCHEME-MONITORING-SYSTEM-postg
 - Docker Compose configuration and backend/frontend image builds using lockfiles validated by the frontend and backend jobs.
 - Full-stack Docker startup, frontend availability, and proxied/direct backend health endpoints, followed by a Chromium/Playwright browser journey that registers a beneficiary, submits an application, completes field-officer and district-officer review plus final admin approval, verifies the beneficiary's refreshed status and approval notification through the Nginx `/api` proxy, and checks phone (390px) and tablet (768px) navigation layouts.
 - Lockfile persistence to `main` only after required validation succeeds and only if `main` has not moved since the run began.
+- A full Playwright browser journey across beneficiary, field officer, district officer and administrator roles, including direct-URL authorization checks, approval notifications, phone/tablet layouts, and a downloadable `civictrack-role-screenshots` CI artifact.
 
 The backend integration suite covers authentication and invalid input, district-scoped access, dashboard date filters, multi-stage approval, audit history, notifications, and rollback when simulated persistence writes fail. A separate browser journey exercises beneficiary registration and application submission, all three approval stages, refreshed beneficiary status, and the final approval notification through the Docker/Nginx frontend. It also verifies the bottom navigation and zero page-level horizontal overflow on a 390px phone viewport, plus the compact sidebar rail on a 768px tablet viewport. A green CI run confirms the automated checks for that commit; it does not prove a live hosted deployment or production readiness.
+
+## 🎓 Placement demo and interview preparation
+
+Use the [Placement Demo Guide](docs/placement-demo.md) for a repeatable local walkthrough, role-specific demo accounts, the complete approval journey, architecture discussion points, and interview questions. The CI browser journey captures screenshots from the running Docker application and publishes them as a workflow artifact; download them from a successful run rather than presenting mock screenshots.
+
+### Resume-ready project summary
+
+**CivicTrack — Scheme Monitoring & Beneficiary Application Management**
+
+- Built a role-based public-benefit application platform using React, Node.js, Express and PostgreSQL, with district-scoped access for Field and District Officers.
+- Implemented a multi-stage approval workflow with transactional audit history and recipient-specific notifications.
+- Added versioned PostgreSQL migrations protected by transaction-scoped advisory locks, plus automated backup/restore verification.
+- Validated the stack with Jest/Supertest integration tests, Playwright browser automation, Docker Compose and GitHub Actions.
+
+Describe the project as locally validated and deployment-configured until the live hosted workflow has been independently verified.
 
 ## ☁️ Hosted deployment status
 
