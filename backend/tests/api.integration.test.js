@@ -553,4 +553,114 @@ describe('CivicTrack API integration', () => {
     expect(response.body.code).toBe('NOT_FOUND');
   });
 
+
+  test('allows administrators to list users without exposing password fields', async () => {
+    const response = await request(app)
+      .get('/api/auth/users')
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.length).toBeGreaterThan(0);
+    expect(response.body.every((user) => !Object.hasOwn(user, 'password'))).toBe(true);
+    expect(response.body.every((user) => !Object.hasOwn(user, 'passwordHash'))).toBe(true);
+  });
+
+  test('allows administrators to create a district-scoped officer account', async () => {
+    const email = `created.officer.${Date.now()}@example.com`;
+    const response = await request(app)
+      .post('/api/auth/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: 'Created Test Officer',
+        email,
+        password: 'OfficerStrong123',
+        role: 'field_officer',
+        district: 'Erode',
+      });
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      name: 'Created Test Officer',
+      email,
+      role: 'field_officer',
+      district: 'Erode',
+      isActive: true,
+    });
+    expect(response.body).not.toHaveProperty('password');
+
+    const storedUser = await User.findOne({ where: { email } });
+    expect(storedUser).not.toBeNull();
+    expect(storedUser.password).not.toBe('OfficerStrong123');
+  });
+
+  test('rejects officer account creation when a district is missing', async () => {
+    const response = await request(app)
+      .post('/api/auth/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: 'Officer Without District',
+        email: `officer.no.district.${Date.now()}@example.com`,
+        password: 'OfficerStrong123',
+        role: 'field_officer',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  test('rejects duplicate user email addresses during administrator provisioning', async () => {
+    const email = `duplicate.officer.${Date.now()}@example.com`;
+    const payload = {
+      name: 'Duplicate Test Officer',
+      email,
+      password: 'OfficerStrong123',
+      role: 'field_officer',
+      district: 'Salem',
+    };
+
+    const first = await request(app)
+      .post('/api/auth/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(payload);
+    expect(first.status).toBe(201);
+
+    const duplicate = await request(app)
+      .post('/api/auth/users')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send(payload);
+    expect(duplicate.status).toBe(409);
+  });
+
+  test('prevents administrators from deactivating their own account', async () => {
+    const adminId = jwt.verify(adminToken, env.JWT_SECRET).id;
+    const response = await request(app)
+      .patch(`/api/auth/users/${adminId}/deactivate`)
+      .set('Authorization', `Bearer ${adminToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe('You cannot deactivate your own account');
+  });
+
+  test('validates account identifiers before deactivation', async () => {
+    const invalid = await request(app)
+      .patch('/api/auth/users/not-a-number/deactivate')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(invalid.status).toBe(400);
+
+    const missing = await request(app)
+      .patch('/api/auth/users/99999999/deactivate')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(missing.status).toBe(404);
+  });
+
+  test('normalizes email addresses during login', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({ email: '  ADMIN@GOVT.IN  ', password: 'password123' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.email).toBe('admin@govt.in');
+    expect(response.body).toHaveProperty('token');
+  });
+
 });
