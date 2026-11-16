@@ -204,10 +204,18 @@ jobs:
       - name: Install Chromium for browser journey
         working-directory: Frontend
         run: npx playwright install --with-deps chromium
-      - name: Exercise beneficiary registration and application submission in browser
+      - name: Exercise full role-based approval journey and responsive layouts in browser
         env:
           CIVICTRACK_BASE_URL: http://127.0.0.1:8080
+          CIVICTRACK_SCREENSHOT_DIR: artifacts/screenshots
         run: node Frontend/e2e/beneficiary-application.mjs
+      - name: Upload role-specific browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: civictrack-role-screenshots
+          path: Frontend/artifacts/screenshots/
+          if-no-files-found: ignore
       - name: Stop smoke-test containers
         if: always()
         run: docker compose down
