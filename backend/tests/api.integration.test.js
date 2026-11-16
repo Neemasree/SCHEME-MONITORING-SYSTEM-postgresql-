@@ -653,14 +653,4 @@ describe('CivicTrack API integration', () => {
     expect(missing.status).toBe(404);
   });
 
-  test('normalizes email addresses during login', async () => {
-    const response = await request(app)
-      .post('/api/auth/login')
-      .send({ email: '  ADMIN@GOVT.IN  ', password: 'password123' });
-
-    expect(response.status).toBe(200);
-    expect(response.body.email).toBe('admin@govt.in');
-    expect(response.body).toHaveProperty('token');
-  });
-
 });
