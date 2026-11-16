@@ -461,7 +461,7 @@ describe('CivicTrack API integration', () => {
 
     const response = await request(app)
       .put(`/api/notifications/${notification.id}/read`)
-      .set('Authorization', `Bearer ${beneficiaryToken}`);
+      .set('Authorization', `Bearer ${registration.body.token}`);
 
     expect(response.status).toBe(404);
     await notification.reload();
