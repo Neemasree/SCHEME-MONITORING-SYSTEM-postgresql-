@@ -14,6 +14,7 @@ const envSchema = z.object({
   CLIENT_ORIGIN: z.string().trim().min(1).default('http://localhost:5173'),
   SQL_LOGGING: z.enum(['true', 'false']).default('false'),
   DB_POOL_MAX: z.coerce.number().int().min(1).max(100).default(10),
+  DB_SSL_REJECT_UNAUTHORIZED: z.enum(['true', 'false']).default('true'),
 }).superRefine((config, context) => {
   if (config.NODE_ENV !== 'production') return;
 
