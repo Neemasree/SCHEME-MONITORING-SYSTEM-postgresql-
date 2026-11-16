@@ -30,6 +30,10 @@ services:
         value: "false"
       - key: DB_POOL_MAX
         value: "10"
+      # Render internal Postgres connections use self-signed TLS certificates.
+      # TLS remains required; certificate-chain verification is disabled only for this private-network connection.
+      - key: DB_SSL_REJECT_UNAUTHORIZED
+        value: "false"
 
   - type: web
     name: civictrack-web
