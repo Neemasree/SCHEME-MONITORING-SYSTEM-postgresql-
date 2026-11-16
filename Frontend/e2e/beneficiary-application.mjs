@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
+import { mkdirSync } from 'node:fs';
+import path from 'node:path';
 import { chromium } from 'playwright';
 
 const baseUrl = (process.env.CIVICTRACK_BASE_URL || 'http://127.0.0.1:8080').replace(/\/+$/, '');
 const email = `civictrack.e2e.${randomUUID()}@example.test`;
 const password = 'E2eStrongPass123';
+const screenshotDir = path.resolve(process.env.CIVICTRACK_SCREENSHOT_DIR || 'artifacts/screenshots');
+mkdirSync(screenshotDir, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage();
 const pageErrors = [];
@@ -29,6 +33,7 @@ const reviewApplication = async ({
     remark,
 }) => {
     await loginAs(roleLabel, accountEmail, accountPassword, homePath);
+    await page.screenshot({ path: path.join(screenshotDir, `${roleLabel.toLowerCase().replaceAll(' ', '-')}-dashboard.png`), fullPage: true });
     await page.getByRole('link', { name: 'Applications' }).click();
     await page.waitForURL((url) => url.pathname.endsWith('/applications'));
 
@@ -72,6 +77,7 @@ try {
     await page.getByRole('heading', { name: 'My Scheme Applications' }).waitFor({
         state: 'visible',
     });
+    await page.screenshot({ path: path.join(screenshotDir, 'beneficiary-applications.png'), fullPage: true });
 
     // Authenticated beneficiaries must not enter administrator routes by URL.
     await page.goto(`${baseUrl}/admin/users`, { waitUntil: 'domcontentloaded' });
